@@ -29,7 +29,7 @@ public class DeviceService extends Service {
 
             @Override
             public IPrinter getPrinter(String bule_mac) throws RemoteException {
-                return new PagePrinter(getApplicationContext());
+                return new LabelPrinter(getApplicationContext());
             }
 
             @Override

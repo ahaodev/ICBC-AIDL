@@ -12,6 +12,7 @@ import android.os.RemoteException;
 import android.util.Base64;
 import android.util.Log;
 
+import com.csnprintersdk.csnio.CSNCanvas;
 import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
 import com.csnprintersdk.csnio.csnbase.CSNIOCallBack;
@@ -208,7 +209,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int iWidth = format.getInt("iWidth");
         int iHeight = format.getInt("iHeight");
-        mPos.POS_PrintPicture(bitmap, iWidth, 0, 2);
+        mPos.POS_PrintPicture(bitmap, iWidth * printerBuilder.pixel, 0, 2);
         return 0;
     }
 
@@ -246,6 +247,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     public class TaskPrint implements Runnable {
+        CSNCanvas canvas = null;
         CSNPOS pos = null;
 
         public TaskPrint(CSNPOS pos) {
@@ -301,7 +303,8 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     public static class Builder {
-        int pageW = 384;
+        int pixel = 203;
+        int pageW = 0;
         int pageH = 0;
         int direction = 0;
         int fontSize = 24;

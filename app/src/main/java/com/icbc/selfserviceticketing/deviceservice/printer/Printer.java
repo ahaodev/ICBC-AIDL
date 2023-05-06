@@ -1,4 +1,4 @@
-package com.icbc.selfserviceticketing.deviceservice;
+package com.icbc.selfserviceticketing.deviceservice.printer;
 
 import static android.security.KeyStore.getApplicationContext;
 
@@ -13,17 +13,18 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.csnprintersdk.csnio.CSNCanvas;
-import com.csnprintersdk.csnio.CSNLabel;
 import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
 import com.csnprintersdk.csnio.csnbase.CSNIOCallBack;
+import com.icbc.selfserviceticketing.deviceservice.IPrinter;
+import com.icbc.selfserviceticketing.deviceservice.Prints;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
+public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     public static int nPrintWidth = 800;//384
     public static boolean bCutter = false;
     public static boolean bDrawer = false;
@@ -32,16 +33,16 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     public static int nCompressMethod = 0;
     public static boolean bAutoPrint = false;
     public static int nPrintContent = 0;
-    private static final String TAG = "LabelPrinter";
+    private static final String TAG = "Printer";
     ExecutorService es = Executors.newScheduledThreadPool(4);
-    CSNLabel csnLabel = new CSNLabel();
+    CSNPOS mPos = new CSNPOS();
     CSNUSBPrinting mUsb = new CSNUSBPrinting();
     Context context;
     public int printerStatus = 0;
 
-    private Printer.Builder pBuilder = new Printer.Builder();
+    private PrinterBuilder pBuilder = new PrinterBuilder();
 
-    public LabelPrinter(Context applicationContext) {
+    public Printer(Context applicationContext) {
         this.context = applicationContext;
         openDevice();
     }
@@ -53,7 +54,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
 
     private void openDevice() {
         final UsbManager mUsbManager = (UsbManager) getApplicationContext().getSystemService(Context.USB_SERVICE);
-        csnLabel.Set(mUsb);
+        mPos.Set(mUsb);
         mUsb.SetCallBack(this);
         HashMap<String, UsbDevice> deviceList = mUsbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
@@ -88,7 +89,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     @Override
     public int getStatus() throws RemoteException {
         byte[] status = new byte[1];
-        // boolean usable = csnCanvas.POS_QueryStatus(status, 2000, 2);
+        boolean usable = mPos.POS_QueryStatus(status, 2000, 2);
 //        return usable ? 0 : 1;
         return 0;
     }
@@ -127,11 +128,11 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
         Log.d(TAG, "setPageSize: OffsetX=" + offsetX);
         Log.d(TAG, "setPageSize: OffsetY=" + offsetY);
         pBuilder
-                .setPageW(pageW)
-                .setPageH(pageH)
+                .setPageW(pBuilder.maxPx)
+                .setPx(pBuilder.maxPx / pageW)
+                .setPageH(pageH * pBuilder.px)
                 .setDirection(direction)
                 .setOffsetX(offsetX).setOffsetY(offsetY);
-        csnLabel.PageBegin(0, 0, pBuilder.pageW, pBuilder.pageH, 0);
         return 0;
     }
 
@@ -143,6 +144,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
      */
     @Override
     public int startPrintDoc() throws RemoteException {
+        mPos.POS_Reset();
         return 0;
     }
 
@@ -171,10 +173,9 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
          * nLan 0-GBK 1-UTF8 3-BIG5 4-SHIFT-JIS 5-EUC-KR
          *
          */
-//        mPos.POS_S_Align(align);
-//        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize/100, 0, 0);
-//        mPos.POS_FeedLine();
-        csnLabel.DrawPlainText(iLeft, iTop, fontSize, 0, text.getBytes());
+        mPos.POS_S_Align(align);
+        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize / 100, 0, 0);
+        mPos.POS_FeedLine();
         Log.d(TAG, "addText: text=" + text);
         Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
         return 0;
@@ -189,16 +190,16 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
          * qrCode – 二维码内容
          */
         int iLeft = format.getInt("iLeft");
-        int iTop = format.getInt("iTop");
-        int expectedHeight = format.getInt("expectedHeight");
-        Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight + " qrCode=" + qrCode);
-        csnLabel.DrawQRCode(iLeft, iTop, 0, 1, 2, 0, qrCode.getBytes());
+        int iTop = format.getInt("iTop");//7
+        int expectedHeight = format.getInt("expectedHeight");//16
+        mPos.POS_S_SetQRcode(qrCode,  10, 0, 1);
+        Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight);
         return 0;
     }
 
     @Override
     public int addImage(Bundle format, String imageData) throws RemoteException {
-        byte[] bytes = Base64.decode(imageData, Base64.DEFAULT);
+        byte[] bytes = android.util.Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
         //rotation(int)：旋转角度，0，90，180，270 四个角度
@@ -211,7 +212,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int iWidth = format.getInt("iWidth");
         int iHeight = format.getInt("iHeight");
-        //csnLabel.DrawBitmap(bitmap, 100, 100, 0);
+        mPos.POS_PrintPicture(bitmap, iWidth * pBuilder.px, 0, 2);
         return 0;
     }
 
@@ -223,14 +224,10 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
      */
     @Override
     public int endPrintDoc() throws RemoteException {
-        Log.d(TAG, "endPrintDoc: 结束打印任务");
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FullCutPaper();
-        csnLabel.PagePrint(1);
-        csnLabel.PageFeed();
-        csnLabel.PageEnd();
+        mPos.POS_FeedLine();
+        mPos.POS_FeedLine();
+        mPos.POS_FeedLine();
+        //mPos.POS_FullCutPaper();
         return 0;
     }
 
@@ -253,6 +250,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     public class TaskPrint implements Runnable {
+        CSNCanvas canvas = null;
         CSNPOS pos = null;
 
         public TaskPrint(CSNPOS pos) {
@@ -306,4 +304,5 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
             usb.Close();
         }
     }
+
 }

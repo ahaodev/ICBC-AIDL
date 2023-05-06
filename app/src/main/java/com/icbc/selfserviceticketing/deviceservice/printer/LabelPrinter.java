@@ -1,4 +1,4 @@
-package com.icbc.selfserviceticketing.deviceservice;
+package com.icbc.selfserviceticketing.deviceservice.printer;
 
 import static android.security.KeyStore.getApplicationContext;
 
@@ -12,17 +12,20 @@ import android.os.RemoteException;
 import android.util.Base64;
 import android.util.Log;
 
-import com.csnprintersdk.csnio.CSNCanvas;
+import com.csnprintersdk.csnio.CSNLabel;
 import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
 import com.csnprintersdk.csnio.csnbase.CSNIOCallBack;
+import com.icbc.selfserviceticketing.deviceservice.IPrinter;
+import com.icbc.selfserviceticketing.deviceservice.Prints;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
+public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     public static int nPrintWidth = 800;//384
     public static boolean bCutter = false;
     public static boolean bDrawer = false;
@@ -31,16 +34,16 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
     public static int nCompressMethod = 0;
     public static boolean bAutoPrint = false;
     public static int nPrintContent = 0;
-    private static final String TAG = "PagePrinter";
+    private static final String TAG = "LabelPrinter";
     ExecutorService es = Executors.newScheduledThreadPool(4);
-    CSNCanvas csnCanvas = new CSNCanvas();
+    CSNLabel csnLabel = new CSNLabel();
     CSNUSBPrinting mUsb = new CSNUSBPrinting();
     Context context;
     public int printerStatus = 0;
 
-    private Printer.Builder pBuilder = new Printer.Builder();
+    private PrinterBuilder pBuilder = new PrinterBuilder();
 
-    public PagePrinter(Context applicationContext) {
+    public LabelPrinter(Context applicationContext) {
         this.context = applicationContext;
         openDevice();
     }
@@ -52,7 +55,7 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
 
     private void openDevice() {
         final UsbManager mUsbManager = (UsbManager) getApplicationContext().getSystemService(Context.USB_SERVICE);
-        csnCanvas.Set(mUsb);
+        csnLabel.Set(mUsb);
         mUsb.SetCallBack(this);
         HashMap<String, UsbDevice> deviceList = mUsbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
@@ -126,11 +129,11 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
         Log.d(TAG, "setPageSize: OffsetX=" + offsetX);
         Log.d(TAG, "setPageSize: OffsetY=" + offsetY);
         pBuilder
-                .setPageW(pageW )
+                .setPageW(pageW)
                 .setPageH(pageH)
                 .setDirection(direction)
                 .setOffsetX(offsetX).setOffsetY(offsetY);
-        csnCanvas.CanvasBegin(pBuilder.pageW, pBuilder.pageH);
+        csnLabel.PageBegin(0, 0, pBuilder.pageW, pBuilder.pageH, 0);
         return 0;
     }
 
@@ -173,7 +176,11 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
 //        mPos.POS_S_Align(align);
 //        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize/100, 0, 0);
 //        mPos.POS_FeedLine();
-        csnCanvas.DrawText(text, -1 , -1, 0, null, fontSize, 0);
+        try {
+            csnLabel.DrawPlainText(iLeft, iTop, 24, 0, text.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         Log.d(TAG, "addText: text=" + text);
         Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
         return 0;
@@ -191,13 +198,17 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int expectedHeight = format.getInt("expectedHeight");
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight + " qrCode=" + qrCode);
-        csnCanvas.DrawQRCode(qrCode, -1, -1, 0, 8, 0, 1);
+        try {
+            csnLabel.DrawQRCode(iLeft, iTop, 0, 1, 2, 0, qrCode.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         return 0;
     }
 
     @Override
     public int addImage(Bundle format, String imageData) throws RemoteException {
-        byte[] bytes = android.util.Base64.decode(imageData, Base64.DEFAULT);
+        byte[] bytes = Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
         //rotation(int)：旋转角度，0，90，180，270 四个角度
@@ -210,7 +221,7 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int iWidth = format.getInt("iWidth");
         int iHeight = format.getInt("iHeight");
-        csnCanvas.DrawBitmap(bitmap, 100, 100, 0);
+        //csnLabel.DrawBitmap(bitmap, 100, 100, 0);
         return 0;
     }
 
@@ -227,8 +238,9 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
 //        csnCanvas.POS_FeedLine();
 //        csnCanvas.POS_FeedLine();
 //        csnCanvas.POS_FullCutPaper();
-        csnCanvas.CanvasPrint(1, 0);
-        csnCanvas.CanvasEnd();
+        csnLabel.PagePrint(2);
+        csnLabel.PageFeed();
+        csnLabel.PageEnd();
         return 0;
     }
 

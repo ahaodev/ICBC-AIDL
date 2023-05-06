@@ -1,4 +1,4 @@
-package com.icbc.selfserviceticketing.deviceservice;
+package com.icbc.selfserviceticketing.deviceservice.printer;
 
 import static android.security.KeyStore.getApplicationContext;
 
@@ -16,13 +16,15 @@ import com.csnprintersdk.csnio.CSNCanvas;
 import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
 import com.csnprintersdk.csnio.csnbase.CSNIOCallBack;
+import com.icbc.selfserviceticketing.deviceservice.IPrinter;
+import com.icbc.selfserviceticketing.deviceservice.Prints;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Printer extends IPrinter.Stub implements CSNIOCallBack {
+public class CanvasPrinter extends IPrinter.Stub implements CSNIOCallBack {
     public static int nPrintWidth = 800;//384
     public static boolean bCutter = false;
     public static boolean bDrawer = false;
@@ -31,16 +33,16 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     public static int nCompressMethod = 0;
     public static boolean bAutoPrint = false;
     public static int nPrintContent = 0;
-    private static final String TAG = "Printer";
+    private static final String TAG = "PagePrinter";
     ExecutorService es = Executors.newScheduledThreadPool(4);
-    CSNPOS mPos = new CSNPOS();
+    CSNCanvas csnCanvas = new CSNCanvas();
     CSNUSBPrinting mUsb = new CSNUSBPrinting();
     Context context;
     public int printerStatus = 0;
 
-    private Builder printerBuilder = new Builder();
+    private PrinterBuilder pBuilder = new PrinterBuilder();
 
-    public Printer(Context applicationContext) {
+    public CanvasPrinter(Context applicationContext) {
         this.context = applicationContext;
         openDevice();
     }
@@ -52,7 +54,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
 
     private void openDevice() {
         final UsbManager mUsbManager = (UsbManager) getApplicationContext().getSystemService(Context.USB_SERVICE);
-        mPos.Set(mUsb);
+        csnCanvas.Set(mUsb);
         mUsb.SetCallBack(this);
         HashMap<String, UsbDevice> deviceList = mUsbManager.getDeviceList();
         Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
@@ -87,7 +89,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     @Override
     public int getStatus() throws RemoteException {
         byte[] status = new byte[1];
-        boolean usable = mPos.POS_QueryStatus(status, 2000, 2);
+        // boolean usable = csnCanvas.POS_QueryStatus(status, 2000, 2);
 //        return usable ? 0 : 1;
         return 0;
     }
@@ -125,11 +127,12 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         Log.d(TAG, "setPageSize: direction=" + direction);
         Log.d(TAG, "setPageSize: OffsetX=" + offsetX);
         Log.d(TAG, "setPageSize: OffsetY=" + offsetY);
-        printerBuilder
-                .setPageW(pageW * 203)
+        pBuilder
+                .setPageW(pageW)
                 .setPageH(pageH)
                 .setDirection(direction)
                 .setOffsetX(offsetX).setOffsetY(offsetY);
+        csnCanvas.CanvasBegin(pBuilder.pageW * pBuilder.px, pBuilder.pageH * pBuilder.px);
         return 0;
     }
 
@@ -141,7 +144,6 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
      */
     @Override
     public int startPrintDoc() throws RemoteException {
-        mPos.POS_Reset();
         return 0;
     }
 
@@ -170,9 +172,10 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
          * nLan 0-GBK 1-UTF8 3-BIG5 4-SHIFT-JIS 5-EUC-KR
          *
          */
-        mPos.POS_S_Align(align);
-        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize / 100, 0, 0);
-        mPos.POS_FeedLine();
+//        mPos.POS_S_Align(align);
+//        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize/100, 0, 0);
+//        mPos.POS_FeedLine();
+        csnCanvas.DrawText(text, -1, -1, 0, null, fontSize, 0);
         Log.d(TAG, "addText: text=" + text);
         Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
         return 0;
@@ -187,16 +190,16 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
          * qrCode – 二维码内容
          */
         int iLeft = format.getInt("iLeft");
-        int iTop = format.getInt("iTop");//7
-        int expectedHeight = format.getInt("expectedHeight");//16
-        mPos.POS_S_SetQRcode(qrCode, 4, 0, 1);
-        Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight);
+        int iTop = format.getInt("iTop");
+        int expectedHeight = format.getInt("expectedHeight");
+        Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight + " qrCode=" + qrCode);
+        csnCanvas.DrawQRCode(qrCode, -1, -1, 0, 8, 0, 1);
         return 0;
     }
 
     @Override
     public int addImage(Bundle format, String imageData) throws RemoteException {
-        byte[] bytes = android.util.Base64.decode(imageData, Base64.DEFAULT);
+        byte[] bytes = Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
         //rotation(int)：旋转角度，0，90，180，270 四个角度
@@ -209,7 +212,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int iWidth = format.getInt("iWidth");
         int iHeight = format.getInt("iHeight");
-        mPos.POS_PrintPicture(bitmap, iWidth * printerBuilder.pixel, 0, 2);
+        csnCanvas.DrawBitmap(bitmap, 100, 100, 0);
         return 0;
     }
 
@@ -221,10 +224,13 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
      */
     @Override
     public int endPrintDoc() throws RemoteException {
-        mPos.POS_FeedLine();
-        mPos.POS_FeedLine();
-        mPos.POS_FeedLine();
-        mPos.POS_FullCutPaper();
+        Log.d(TAG, "endPrintDoc: 结束打印任务");
+//        csnCanvas.POS_FeedLine();
+//        csnCanvas.POS_FeedLine();
+//        csnCanvas.POS_FeedLine();
+//        csnCanvas.POS_FullCutPaper();
+        csnCanvas.CanvasPrint(1, 0);
+        csnCanvas.CanvasEnd();
         return 0;
     }
 
@@ -247,7 +253,6 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     public class TaskPrint implements Runnable {
-        CSNCanvas canvas = null;
         CSNPOS pos = null;
 
         public TaskPrint(CSNPOS pos) {
@@ -299,56 +304,6 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         @Override
         public void run() {
             usb.Close();
-        }
-    }
-
-    public static class Builder {
-        int pixel = 203;
-        int pageW = 0;
-        int pageH = 0;
-        int direction = 0;
-        int fontSize = 24;
-        int align = 1;
-        int offsetX = 0;
-        int offsetY = 0;
-
-        public Builder setPageW(int pageW) {
-            this.pageW = pageW;
-            return this;
-        }
-
-        public Builder setDirection(int direction) {
-            this.direction = direction;
-            return this;
-        }
-
-        public Builder setPageH(int pageH) {
-            this.pageH = pageH;
-            return this;
-        }
-
-
-        public Builder setFontSize(int fontSize) {
-            this.fontSize = fontSize;
-            return this;
-        }
-
-
-        public Builder setAlign(int align) {
-            this.align = align;
-            return this;
-        }
-
-
-        public Builder setOffsetX(int offsetX) {
-            this.offsetX = offsetX;
-            return this;
-        }
-
-
-        public Builder setOffsetY(int offsetY) {
-            this.offsetY = offsetY;
-            return this;
         }
     }
 }

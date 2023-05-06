@@ -7,6 +7,9 @@ import android.os.RemoteException;
 
 import androidx.annotation.Nullable;
 
+import com.icbc.selfserviceticketing.deviceservice.printer.PagePrinter;
+import com.icbc.selfserviceticketing.deviceservice.printer.Printer;
+
 public class DeviceService extends Service {
     @Nullable
     @Override
@@ -29,7 +32,7 @@ public class DeviceService extends Service {
 
             @Override
             public IPrinter getPrinter(String bule_mac) throws RemoteException {
-                return new LabelPrinter(getApplicationContext());
+                return new Printer(getApplicationContext());
             }
 
             @Override

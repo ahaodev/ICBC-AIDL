@@ -1,23 +1,36 @@
 package com.icbc.selfserviceticketing.deviceservice;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
-import com.zkteco.android.util.SerialPort;
+//import com.zkteco.android.util.SerialPort;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import android.serialport.SerialPort;
 
 public class Scanner extends IScanner.Stub implements Runnable {
-    private static final String DEV_PORT = "/dev/ttyS4";
-    private static final int DEV_BAUDRATE = 115200;
+    //private static final String DEV_PORT = "/dev/ttyS4";
+    //private static final String DEV_PORT = "/dev/ttyXRM1";
+    //private static final String DEV_PORT = "/dev/ttyXRM0";
+    //private static final String DEV_PORT = "/dev/ttyUSB10";
+    //private static final String DEV_PORT = "/dev/ttyFIQ0";
+    private static final String DEV_PORT = "/dev/ttyACM0";
+    //private static final int DEV_BAUDRATE = 115200;
+    private static final int DEV_BAUDRATE = 9600;
     private boolean bStart = false;
     private SerialPort mSerialPort;
     private ScannerListener mScannerListener;
+    private Context context;
+
+    public Scanner(Context applicationContext) {
+        this.context =applicationContext;
+    }
 
     @Override
     public void startScan(Bundle param, long timeout, ScannerListener listener) throws RemoteException {

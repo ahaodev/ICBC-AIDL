@@ -22,7 +22,7 @@ public class DeviceService extends Service {
 
             @Override
             public IScanner getScanner(int cameraId) throws RemoteException {
-                return new Scanner(getApplicationContext());
+                return new ScannerSuperLead(getApplicationContext());
             }
 
             @Override

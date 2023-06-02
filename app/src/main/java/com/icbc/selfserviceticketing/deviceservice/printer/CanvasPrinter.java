@@ -48,7 +48,7 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
     }
 
     @Override
-    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam)  {
+    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam) {
         return 0;
     }
 
@@ -87,7 +87,7 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int getStatus()  {
+    public int getStatus() {
         byte[] status = new byte[1];
         // boolean usable = csnCanvas.POS_QueryStatus(status, 2000, 2);
 //        return usable ? 0 : 1;
@@ -103,7 +103,7 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int setPageSize(Bundle format)  {
+    public int setPageSize(Bundle format) {
         /**
          * format – 指定打印设置格式
          * pageW(int)：纸张宽度（毫米），不能大于门票纸，否则可能导致定位
@@ -128,11 +128,12 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
         Log.d(TAG, "setPageSize: OffsetX=" + offsetX);
         Log.d(TAG, "setPageSize: OffsetY=" + offsetY);
         pBuilder
-                .setPageW(pageW)
-                .setPageH(pageH)
+                .setPageW(pageW * 8)
+                .setPageH(pageH * 8)
                 .setDirection(direction)
                 .setOffsetX(offsetX).setOffsetY(offsetY);
-        csnCanvas.CanvasBegin(pBuilder.pageW * 8, pBuilder.pageH * 8);
+        csnCanvas.CanvasBegin(pBuilder.pageW, pBuilder.pageH);
+        csnCanvas.SetPrintDirection(1);
         return 0;
     }
 
@@ -143,12 +144,12 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int startPrintDoc()  {
+    public int startPrintDoc() {
         return 0;
     }
 
     @Override
-    public int addText(Bundle format, String text)  {
+    public int addText(Bundle format, String text) {
         /**
          * fontName(Sting)：字体名称，安卓下使用的字体文件必须放在
          * asset\font 目录下，例如填： FZLTXHJW.TTF ， 则该字体文件存
@@ -175,14 +176,47 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
 //        mPos.POS_S_Align(align);
 //        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize/100, 0, 0);
 //        mPos.POS_FeedLine();
-        csnCanvas.DrawText(text, -1, -1, 0, null, fontSize, 0);
+        es.submit(new Runnable() {
+            @Override
+            public void run() {
+                csnCanvas.DrawText(text, getX(align, iLeft), getY(iTop), convertAlign(align), null, fontSize, 0);
+
+            }
+        });
         Log.d(TAG, "addText: text=" + text);
         Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
         return 0;
     }
 
+    private int convertAlign(int align) {
+        return align;
+    }
+
+    private int getX(int align, int iLeft) {
+        int x = 1;
+        switch (align) {
+            case 0:
+                x = -1;
+                break;
+            case 1:
+                x = -2;
+                break;
+            case 2:
+                x = -3;
+                break;
+        }
+        if (iLeft > x)
+            x = iLeft * 8;
+        return x;
+    }
+
+    private int getY(int iTop) {
+        int y = iTop * 8;
+        return y;
+    }
+
     @Override
-    public int addQrCode(Bundle format, String qrCode)  {
+    public int addQrCode(Bundle format, String qrCode) {
         /**
          * iLeft(int): 距离左边距离,单位 mm
          * iTop(int): 距离顶部距离,单位 mm
@@ -193,12 +227,18 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
         int iTop = format.getInt("iTop");
         int expectedHeight = format.getInt("expectedHeight");
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight + " qrCode=" + qrCode);
-        csnCanvas.DrawQRCode(qrCode, -1, -1, 0, 8, 0, 1);
+        es.submit(new Runnable() {
+            @Override
+            public void run() {
+                csnCanvas.DrawQRCode(qrCode, getX(0, iLeft), getY(iTop), 0, 8, 0, 1);
+
+            }
+        });
         return 0;
     }
 
     @Override
-    public int addImage(Bundle format, String imageData)  {
+    public int addImage(Bundle format, String imageData) {
         byte[] bytes = Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
@@ -212,7 +252,13 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
         int iTop = format.getInt("iTop");
         int iWidth = format.getInt("iWidth");
         int iHeight = format.getInt("iHeight");
-        csnCanvas.DrawBitmap(bitmap, 100, 100, 0);
+        es.submit(new Runnable() {
+            @Override
+            public void run() {
+                csnCanvas.DrawBitmap(bitmap, iLeft * 8, getY(iTop), rotation);
+            }
+        });
+
         return 0;
     }
 
@@ -223,14 +269,14 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int endPrintDoc()  {
+    public int endPrintDoc() {
         Log.d(TAG, "endPrintDoc: 结束打印任务");
 //        csnCanvas.POS_FeedLine();
 //        csnCanvas.POS_FeedLine();
 //        csnCanvas.POS_FeedLine();
 //        csnCanvas.POS_FullCutPaper();
-        csnCanvas.CanvasPrint(1, 0);
         csnCanvas.CanvasEnd();
+        csnCanvas.CanvasPrint(1, 0);
         return 0;
     }
 
@@ -244,35 +290,13 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
     public void OnOpenFailed() {
         printerStatus = 1;
         Log.d(TAG, "OnOpenFailed: " + printerStatus);
+
     }
 
     @Override
     public void OnClose() {
         printerStatus = 2;
         Log.d(TAG, "OnClose: " + printerStatus);
-    }
-
-    public class TaskPrint implements Runnable {
-        CSNPOS pos = null;
-
-        public TaskPrint(CSNPOS pos) {
-            this.pos = pos;
-        }
-
-        @Override
-        public void run() {
-            final int bPrintResult = Prints.PrintTicket(
-                    context,
-                    pos, nPrintWidth,
-                    bCutter,
-                    bDrawer,
-                    bBeeper,
-                    1,
-                    nPrintContent,
-                    nCompressMethod);
-            final boolean bIsOpened = pos.GetIO().IsOpened();
-        }
-
     }
 
     public class TaskOpen implements Runnable {

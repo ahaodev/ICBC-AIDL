@@ -14,11 +14,12 @@ public class IProxyPrinterTest {
     @Test
     public void printTest() throws InterruptedException {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        IProxyPrinter printer = new PagePrinter(appContext);
+        IProxyPrinter printer = new CanvasPrinter(appContext);
         Thread.sleep(1000);
         PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
         uchiTest.printer();
         //testPrinterICBCTest(printer);
+        printer.endPrintDoc();
         printer.CloseDevice(1);
     }
 

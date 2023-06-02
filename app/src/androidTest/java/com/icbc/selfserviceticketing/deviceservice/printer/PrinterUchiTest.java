@@ -12,8 +12,8 @@ public class PrinterUchiTest {
 
     public void printer() {
         android.os.Bundle pageBundle = new Bundle();
-        pageBundle.putInt("pageW", 155);
-        pageBundle.putInt("pageH", 125);
+        pageBundle.putInt("pageW", 72);
+        pageBundle.putInt("pageH", 100);
         pageBundle.putInt("OffsetX", 0);
         pageBundle.putInt("OffsetY", 0);
         pageBundle.putInt("direction", 0);

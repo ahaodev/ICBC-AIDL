@@ -122,7 +122,7 @@ public class PagePrinter implements CSNIOCallBack, IProxyPrinter {
                 .setDirection(direction)
                 .setOffsetX(offsetX).setOffsetY(offsetY);
         csnPage.PageEnter();
-        csnPage.SetPrintArea(10, 10, 576, 900, 3);
+        csnPage.SetPrintArea(0, 0, pageW, pageH, 3);
         return 0;
     }
 
@@ -163,7 +163,6 @@ public class PagePrinter implements CSNIOCallBack, IProxyPrinter {
         int x = getX(align, iLeft * 8);
         int y = getY(iTop);
         boolean status = csnPage.DrawText(text, x, y, 0, 0, 0, 0);
-        csnPage.PagePrint();
         return status ? 0 : 1;
     }
 
@@ -207,8 +206,7 @@ public class PagePrinter implements CSNIOCallBack, IProxyPrinter {
         int expectedHeight = format.getInt("expectedHeight");
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight + " qrCode=" + qrCode);
         int maxWidth = 16;
-        //boolean status = csnPage.DrawQRCode(qrCode, iLeft * 8, iTop * 8, expectedHeight / maxWidth, 3, 1);
-        boolean status = true;
+        boolean status = csnPage.DrawQRCode(qrCode, iLeft * 8, iTop * 8, expectedHeight / maxWidth, 3, 1);
         return status ? 0 : 1;
     }
 

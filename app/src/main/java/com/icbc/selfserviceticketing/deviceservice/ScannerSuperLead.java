@@ -54,7 +54,6 @@ public class ScannerSuperLead extends IScanner.Stub {
         if (enable) return;
         enable = true;
         mScannerListener = listener;
-        release();
         Log.d(TAG, "开始扫码" + enable);
         thread.start();
     }
@@ -62,10 +61,8 @@ public class ScannerSuperLead extends IScanner.Stub {
     @Override
     public void stopScan() throws RemoteException {
         Log.d(TAG, "stopScan: ");
-        if (!enable) return;
         enable = false;
         onCancelCallback();
-        release();
         try {
             port.close();
         } catch (IOException e) {
@@ -104,10 +101,6 @@ public class ScannerSuperLead extends IScanner.Stub {
         }
     }
 
-    private void release() {
-
-    }
-
 
     private void read() {
         Log.d(TAG, "Thread:  run");
@@ -118,6 +111,7 @@ public class ScannerSuperLead extends IScanner.Stub {
                 bytesRead = port.read(buffer, 200);
             } catch (IOException e) {
                 e.printStackTrace();
+                onErrorCallback(-1, e.getMessage());
             }
             Log.d(TAG, "read: data size =" + bytesRead);
             if (bytesRead > 0) {

@@ -8,32 +8,19 @@ import android.graphics.BitmapFactory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Base64;
 import android.util.Log;
 
-import com.csnprintersdk.csnio.CSNCanvas;
-import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNPage;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
 import com.csnprintersdk.csnio.csnbase.CSNIOCallBack;
-import com.icbc.selfserviceticketing.deviceservice.IPrinter;
-import com.icbc.selfserviceticketing.deviceservice.Prints;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
-    public static int nPrintWidth = 800;//384
-    public static boolean bCutter = false;
-    public static boolean bDrawer = false;
-    public static boolean bBeeper = true;
-    public static int nPrintCount = 1;
-    public static int nCompressMethod = 0;
-    public static boolean bAutoPrint = false;
-    public static int nPrintContent = 0;
+public class PagePrinter implements CSNIOCallBack, IProxyPrinter {
     private static final String TAG = "PagePrinter";
     ExecutorService es = Executors.newScheduledThreadPool(4);
     CSNPage csnPage = new CSNPage();
@@ -41,7 +28,7 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
     Context context;
     public int printerStatus = 0;
 
-    private PrinterBuilder pBuilder = new PrinterBuilder();
+    private Builder pBuilder = new Builder();
 
     public PagePrinter(Context applicationContext) {
         this.context = applicationContext;
@@ -49,7 +36,8 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam) throws RemoteException {
+    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam) {
+        Log.d(TAG, "OpenDevice: DeviceID=" + DeviceID + "deviceFile=" + deviceFile + "szPort=" + szPort + "szParam=" + szParam);
         return 0;
     }
 
@@ -75,7 +63,7 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int CloseDevice(int DeviceID) throws RemoteException {
+    public int CloseDevice(int DeviceID) {
         es.submit(new TaskClose(mUsb));
         Log.d(TAG, "CloseDevice: ");
         return 0;
@@ -85,10 +73,10 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
      * 首先获取状态
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int getStatus() throws RemoteException {
+    public int getStatus() {
         byte[] status = new byte[1];
         // boolean usable = csnCanvas.POS_QueryStatus(status, 2000, 2);
 //        return usable ? 0 : 1;
@@ -101,10 +89,10 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
      * @param format - 打印设置
      *               <ul>
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int setPageSize(Bundle format) throws RemoteException {
+    public int setPageSize(Bundle format) {
         /**
          * format – 指定打印设置格式
          * pageW(int)：纸张宽度（毫米），不能大于门票纸，否则可能导致定位
@@ -134,7 +122,7 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
                 .setDirection(direction)
                 .setOffsetX(offsetX).setOffsetY(offsetY);
         csnPage.PageEnter();
-        csnPage.SetPrintArea(0, 0, 576, 900, 0);
+        csnPage.SetPrintArea(10, 10, 576, 900, 3);
         return 0;
     }
 
@@ -142,15 +130,15 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
      * 首先是获取状态，其次是startPrintDoc打印
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int startPrintDoc() throws RemoteException {
+    public int startPrintDoc() {
         return 0;
     }
 
     @Override
-    public int addText(Bundle format, String text) throws RemoteException {
+    public int addText(Bundle format, String text) {
         /**
          * fontName(Sting)：字体名称，安卓下使用的字体文件必须放在
          * asset\font 目录下，例如填： FZLTXHJW.TTF ， 则该字体文件存
@@ -170,17 +158,17 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int align = format.getInt("align");
         int pageWidth = format.getInt("pageWidth");
-        /**
-         * nLan 0-GBK 1-UTF8 3-BIG5 4-SHIFT-JIS 5-EUC-KR
-         *
-         */
-//        mPos.POS_S_Align(align);
-//        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize/100, 0, 0);
-//        mPos.POS_FeedLine();
+
         Log.d(TAG, "addText: text=" + text + " fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
-        csnPage.DrawText(text, getX(align, iLeft * pBuilder.px), getY(iTop * pBuilder.px), 0, 0, 0, 0);
-        csnPage.DrawText(text, -1, iTop*8, 0, 0, 0, 0);
-        return 0;
+        int x = getX(align, iLeft * 8);
+        int y = getY(iTop);
+        boolean status = csnPage.DrawText(text, x, y, 0, 0, 0, 0);
+        csnPage.PagePrint();
+        return status ? 0 : 1;
+    }
+
+    private int convertAlign(int align) {
+        return align;
     }
 
     private int getX(int align, int iLeft) {
@@ -197,17 +185,17 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
                 break;
         }
         if (iLeft > x)
-            x = iLeft;
+            x = iLeft * 8;
         return x;
     }
 
     private int getY(int iTop) {
-        int y = iTop;
+        int y = iTop * 8;
         return y;
     }
 
     @Override
-    public int addQrCode(Bundle format, String qrCode) throws RemoteException {
+    public int addQrCode(Bundle format, String qrCode) {
         /**
          * iLeft(int): 距离左边距离,单位 mm
          * iTop(int): 距离顶部距离,单位 mm
@@ -219,12 +207,13 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
         int expectedHeight = format.getInt("expectedHeight");
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight + " qrCode=" + qrCode);
         int maxWidth = 16;
-        boolean status = csnPage.DrawQRCode(qrCode, iLeft * 8, iTop * 8, expectedHeight / maxWidth, 3, 1);
+        //boolean status = csnPage.DrawQRCode(qrCode, iLeft * 8, iTop * 8, expectedHeight / maxWidth, 3, 1);
+        boolean status = true;
         return status ? 0 : 1;
     }
 
     @Override
-    public int addImage(Bundle format, String imageData) throws RemoteException {
+    public int addImage(Bundle format, String imageData) {
         byte[] bytes = android.util.Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
@@ -245,15 +234,11 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
      * 结束打印任务
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int endPrintDoc() throws RemoteException {
+    public int endPrintDoc() {
         Log.d(TAG, "endPrintDoc: 结束打印任务");
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FullCutPaper();
         csnPage.PagePrint();
         csnPage.PageExit();
         return 0;
@@ -277,28 +262,6 @@ public class PagePrinter extends IPrinter.Stub implements CSNIOCallBack {
         Log.d(TAG, "OnClose: " + printerStatus);
     }
 
-    public class TaskPrint implements Runnable {
-        CSNPOS pos = null;
-
-        public TaskPrint(CSNPOS pos) {
-            this.pos = pos;
-        }
-
-        @Override
-        public void run() {
-            final int bPrintResult = Prints.PrintTicket(
-                    context,
-                    pos, nPrintWidth,
-                    bCutter,
-                    bDrawer,
-                    bBeeper,
-                    1,
-                    nPrintContent,
-                    nCompressMethod);
-            final boolean bIsOpened = pos.GetIO().IsOpened();
-        }
-
-    }
 
     public class TaskOpen implements Runnable {
         CSNUSBPrinting usb = null;

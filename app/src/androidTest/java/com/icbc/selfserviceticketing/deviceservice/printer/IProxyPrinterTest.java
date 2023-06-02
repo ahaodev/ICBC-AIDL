@@ -1,69 +1,28 @@
-package com.example.icbc_aidl;
+package com.icbc.selfserviceticketing.deviceservice.printer;
 
-import static org.junit.Assert.assertEquals;
-
-import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.util.Log;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.icbc.selfserviceticketing.deviceservice.DeviceService;
-import com.icbc.selfserviceticketing.deviceservice.IDeviceService;
-import com.icbc.selfserviceticketing.deviceservice.IPrinter;
-import com.icbc.selfserviceticketing.deviceservice.IScanner;
-import com.icbc.selfserviceticketing.deviceservice.ScannerListener;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-/**
- * ICBC AIDL Service 层单元测试
- */
 @RunWith(AndroidJUnit4.class)
-public class ExampleInstrumentedTest {
-    private static final String TAG = "ExampleInstrumentedTest";
-
+public class IProxyPrinterTest {
     @Test
-    public void useAppContext() throws InterruptedException {
-
+    public void printTest() throws InterruptedException {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        ServiceConnection mConnection = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                IDeviceService binder = IDeviceService.Stub.asInterface(service);
-                try {
-                    IScanner scanner = binder.getScanner(1);
-                    IPrinter printer = binder.getPrinter("a");
-                    testPrinterICBCTest(printer);
-                    //testScanner(scanner);
-                    Log.d("Scanner", "onServiceConnected: ");
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                }
-            }
-
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                // 服务连接断开时的处理逻辑
-                Log.d("TEST", "onServiceDisconnected: ");
-            }
-        };
-        Intent intent = new Intent(appContext, DeviceService.class);
-        appContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE | Context.BIND_DEBUG_UNBIND);
-        Thread.sleep(100000);
-        assertEquals("com.icbc.selfserviceticketing.deviceservice", appContext.getPackageName());
+        IProxyPrinter printer = new PagePrinter(appContext);
+        Thread.sleep(1000);
+        PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
+        uchiTest.printer();
+        //testPrinterICBCTest(printer);
+        printer.CloseDevice(1);
     }
 
-
-    private void testPrinterICBCTest(IPrinter printer) throws RemoteException {
+    private void testPrinterICBCTest(IProxyPrinter printer) {
         /**
          *    openDevice: device =  VID:0FE6 PID:811EVendorId=4070ProductId=33054
          *    OnOpen: 0
@@ -110,9 +69,9 @@ public class ExampleInstrumentedTest {
         textBuilder.align = 1;
         textBuilder.pageWidth = 92;
         printerText(printer, text, textBuilder);
-        /**
-         *          *    addText: text=票券编号
-         *          *    addText: fontSize=14 rotation=0 iLeft=3 iTop=35 align=1 pageWidth=29
+        /*
+         * addText: text=票券编号
+         * addText: fontSize=14 rotation=0 iLeft=3 iTop=35 align=1 pageWidth=29
          */
         TextBuilder numberBuilder = new TextBuilder();
         String noTitle = "票券编号";
@@ -123,10 +82,10 @@ public class ExampleInstrumentedTest {
         textBuilder.align = 1;
         textBuilder.pageWidth = 29;
         printerText(printer, noTitle, numberBuilder);
-/**
- *          *    addText: text=订单号
- *          *    addText: fontSize=44 rotation=0 iLeft=3 iTop=56 align=1 pageWidth=69
- */
+        /*
+         * addText: text=订单号
+         * addText: fontSize=44 rotation=0 iLeft=3 iTop=56 align=1 pageWidth=69
+         */
         TextBuilder dingdanBuilder = new TextBuilder();
         String dingdanTitle = "订单号";
         textBuilder.fontSize = 44;
@@ -149,7 +108,7 @@ public class ExampleInstrumentedTest {
         textBuilder.align = 0;
         textBuilder.pageWidth = 29;
         printerText(printer, qdTitle, qdBuilder);
-        /**
+        /*
          *   addQrCode: iLeft=14 iTop=94 expectedHeight=24
          */
         android.os.Bundle qrBundle = new Bundle();
@@ -211,7 +170,7 @@ public class ExampleInstrumentedTest {
         printer.CloseDevice(1);
     }
 
-    private void printerText(IPrinter printer, String text, TextBuilder textBuilder) throws RemoteException {
+    private void printerText(IProxyPrinter printer, String text, TextBuilder textBuilder) {
         android.os.Bundle textBuild = new Bundle();
         textBuild.putInt("fontSize", textBuilder.fontSize);
         textBuild.putInt("rotation", textBuilder.rotation);
@@ -220,34 +179,4 @@ public class ExampleInstrumentedTest {
         textBuild.putInt("pageWidth", textBuilder.pageWidth);
         printer.addText(textBuild, text);
     }
-
-    private void testScanner(IScanner scanner) throws RemoteException {
-        scanner.startScan(null, 1000, new ScannerListener() {
-            @Override
-            public IBinder asBinder() {
-                return null;
-            }
-
-            @Override
-            public void onSuccess(Bundle result) throws RemoteException {
-                Log.d(TAG, "onSuccess: result" + result.toString());
-            }
-
-            @Override
-            public void onError(int error, String message) throws RemoteException {
-                Log.d(TAG, "onError: ");
-            }
-
-            @Override
-            public void onTimeout() throws RemoteException {
-                Log.d(TAG, "onTimeout: ");
-            }
-
-            @Override
-            public void onCancel() throws RemoteException {
-                Log.d(TAG, "onCancel: ");
-            }
-        });
-    }
-
 }

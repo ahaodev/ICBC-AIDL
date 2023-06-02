@@ -8,7 +8,6 @@ import android.graphics.BitmapFactory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Base64;
 import android.util.Log;
 
@@ -16,7 +15,6 @@ import com.csnprintersdk.csnio.CSNCanvas;
 import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
 import com.csnprintersdk.csnio.csnbase.CSNIOCallBack;
-import com.icbc.selfserviceticketing.deviceservice.IPrinter;
 import com.icbc.selfserviceticketing.deviceservice.Prints;
 
 import java.util.HashMap;
@@ -24,7 +22,12 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class Printer extends IPrinter.Stub implements CSNIOCallBack {
+/**
+ * EP-381C
+ * 8 dots/mm(203dpi)
+ * 72mm
+ */
+public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
     public static int nPrintWidth = 800;//384
     public static boolean bCutter = false;
     public static boolean bDrawer = false;
@@ -34,21 +37,23 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     public static boolean bAutoPrint = false;
     public static int nPrintContent = 0;
     private static final String TAG = "Printer";
+    public static float yc = 0.03937007874f;
+    public static float maxYC = 3.15f;
+    public static float maxW = 640;
     ExecutorService es = Executors.newScheduledThreadPool(4);
     CSNPOS mPos = new CSNPOS();
     CSNUSBPrinting mUsb = new CSNUSBPrinting();
     Context context;
     public int printerStatus = 0;
+    private Builder builder = new Builder();
 
-    private PrinterBuilder pBuilder = new PrinterBuilder();
-
-    public Printer(Context applicationContext) {
+    public LinePrinter(Context applicationContext) {
         this.context = applicationContext;
         openDevice();
     }
 
     @Override
-    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam) throws RemoteException {
+    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam)  {
         return 0;
     }
 
@@ -74,7 +79,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int CloseDevice(int DeviceID) throws RemoteException {
+    public int CloseDevice(int DeviceID)  {
         es.submit(new TaskClose(mUsb));
         Log.d(TAG, "CloseDevice: ");
         return 0;
@@ -84,10 +89,10 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
      * 首先获取状态
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int getStatus() throws RemoteException {
+    public int getStatus()  {
         byte[] status = new byte[1];
         boolean usable = mPos.POS_QueryStatus(status, 2000, 2);
 //        return usable ? 0 : 1;
@@ -100,15 +105,15 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
      * @param format - 打印设置
      *               <ul>
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int setPageSize(Bundle format) throws RemoteException {
+    public int setPageSize(Bundle format)  {
         /**
          * format – 指定打印设置格式
          * pageW(int)：纸张宽度（毫米），不能大于门票纸，否则可能导致定位
          * 错误
-         * pageH(int)：纸张高度（毫米），不能大于门票纸，否则可能导致定位错
+         * pageH(int)：纸张高度（毫米），不能大于门票纸，否则可能导致定位错q
          * 误
          * direction(int)：打印起始坐标方向，0－出纸方向右下角为坐标原点，1
          * －出纸方向左上角为坐标原点
@@ -127,12 +132,11 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         Log.d(TAG, "setPageSize: direction=" + direction);
         Log.d(TAG, "setPageSize: OffsetX=" + offsetX);
         Log.d(TAG, "setPageSize: OffsetY=" + offsetY);
-        pBuilder
-                .setPageW(pBuilder.maxPx)
-                .setPx(pBuilder.maxPx / pageW)
-                .setPageH(pageH * pBuilder.px)
+        builder.setPageH(pageH)
                 .setDirection(direction)
-                .setOffsetX(offsetX).setOffsetY(offsetY);
+                .setOffsetX(offsetX)
+                .setOffsetY(offsetY);
+        Log.d(TAG, "setPageSize: " + builder.toString());
         return 0;
     }
 
@@ -140,16 +144,16 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
      * 首先是获取状态，其次是startPrintDoc打印
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int startPrintDoc() throws RemoteException {
+    public int startPrintDoc()  {
         mPos.POS_Reset();
         return 0;
     }
 
     @Override
-    public int addText(Bundle format, String text) throws RemoteException {
+    public int addText(Bundle format, String text)  {
         /**
          * fontName(Sting)：字体名称，安卓下使用的字体文件必须放在
          * asset\font 目录下，例如填： FZLTXHJW.TTF ， 则该字体文件存
@@ -169,12 +173,11 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int align = format.getInt("align");
         int pageWidth = format.getInt("pageWidth");
-        /**
-         * nLan 0-GBK 1-UTF8 3-BIG5 4-SHIFT-JIS 5-EUC-KR
-         *
-         */
         mPos.POS_S_Align(align);
-        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize / 100, 0, 0);
+        int nOrgx = (int) Utils.millimetersToPixels(iLeft);//指定 X 方向（水平）的起始点位置离左边界的点数。 2 寸打印机一行 384 点，3 寸打印机一行 576 点。
+        int nHeightTimes = fontSize / 100;//字体大小
+        int nLan = 0;//nLan 0-GBK 1-UTF8 3-BIG5 4-SHIFT-JIS 5-EUC-KR
+        mPos.POS_TextOut(text, nLan, nOrgx, 1, nHeightTimes, 0, 0);
         mPos.POS_FeedLine();
         Log.d(TAG, "addText: text=" + text);
         Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
@@ -182,7 +185,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int addQrCode(Bundle format, String qrCode) throws RemoteException {
+    public int addQrCode(Bundle format, String qrCode)  {
         /**
          * iLeft(int): 距离左边距离,单位 mm
          * iTop(int): 距离顶部距离,单位 mm
@@ -192,13 +195,15 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         int iLeft = format.getInt("iLeft");
         int iTop = format.getInt("iTop");//7
         int expectedHeight = format.getInt("expectedHeight");//16
-        mPos.POS_S_SetQRcode(qrCode,  10, 0, 1);
+        //宽 1~16
+        int nWidthX = (expectedHeight / builder.pageW) * 16;
+        mPos.POS_S_SetQRcode(qrCode, 16, 0, 1);
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight);
         return 0;
     }
 
     @Override
-    public int addImage(Bundle format, String imageData) throws RemoteException {
+    public int addImage(Bundle format, String imageData)  {
         byte[] bytes = android.util.Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
@@ -212,7 +217,7 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
         int iTop = format.getInt("iTop");
         int iWidth = format.getInt("iWidth");
         int iHeight = format.getInt("iHeight");
-        mPos.POS_PrintPicture(bitmap, iWidth * pBuilder.px, 0, 2);
+        mPos.POS_PrintPicture(bitmap, iWidth, 0, 2);
         return 0;
     }
 
@@ -220,10 +225,10 @@ public class Printer extends IPrinter.Stub implements CSNIOCallBack {
      * 结束打印任务
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int endPrintDoc() throws RemoteException {
+    public int endPrintDoc()  {
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();

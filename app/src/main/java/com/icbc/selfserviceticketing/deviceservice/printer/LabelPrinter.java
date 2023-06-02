@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
+public class LabelPrinter implements CSNIOCallBack, IProxyPrinter {
     public static int nPrintWidth = 800;//384
     public static boolean bCutter = false;
     public static boolean bDrawer = false;
@@ -41,7 +41,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     Context context;
     public int printerStatus = 0;
 
-    private PrinterBuilder pBuilder = new PrinterBuilder();
+    private Builder pBuilder = new Builder();
 
     public LabelPrinter(Context applicationContext) {
         this.context = applicationContext;
@@ -49,7 +49,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam) throws RemoteException {
+    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam) {
         return 0;
     }
 
@@ -75,7 +75,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int CloseDevice(int DeviceID) throws RemoteException {
+    public int CloseDevice(int DeviceID) {
         es.submit(new TaskClose(mUsb));
         Log.d(TAG, "CloseDevice: ");
         return 0;
@@ -85,10 +85,10 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
      * 首先获取状态
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int getStatus() throws RemoteException {
+    public int getStatus() {
         byte[] status = new byte[1];
         // boolean usable = csnCanvas.POS_QueryStatus(status, 2000, 2);
 //        return usable ? 0 : 1;
@@ -101,10 +101,10 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
      * @param format - 打印设置
      *               <ul>
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int setPageSize(Bundle format) throws RemoteException {
+    public int setPageSize(Bundle format) {
         /**
          * format – 指定打印设置格式
          * pageW(int)：纸张宽度（毫米），不能大于门票纸，否则可能导致定位
@@ -141,15 +141,15 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
      * 首先是获取状态，其次是startPrintDoc打印
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int startPrintDoc() throws RemoteException {
+    public int startPrintDoc() {
         return 0;
     }
 
     @Override
-    public int addText(Bundle format, String text) throws RemoteException {
+    public int addText(Bundle format, String text) {
         /**
          * fontName(Sting)：字体名称，安卓下使用的字体文件必须放在
          * asset\font 目录下，例如填： FZLTXHJW.TTF ， 则该字体文件存
@@ -187,7 +187,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int addQrCode(Bundle format, String qrCode) throws RemoteException {
+    public int addQrCode(Bundle format, String qrCode) {
         /**
          * iLeft(int): 距离左边距离,单位 mm
          * iTop(int): 距离顶部距离,单位 mm
@@ -207,7 +207,7 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
     }
 
     @Override
-    public int addImage(Bundle format, String imageData) throws RemoteException {
+    public int addImage(Bundle format, String imageData) {
         byte[] bytes = Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
@@ -229,10 +229,10 @@ public class LabelPrinter extends IPrinter.Stub implements CSNIOCallBack {
      * 结束打印任务
      *
      * @return
-     * @throws RemoteException
+     * @
      */
     @Override
-    public int endPrintDoc() throws RemoteException {
+    public int endPrintDoc() {
         Log.d(TAG, "endPrintDoc: 结束打印任务");
 //        csnCanvas.POS_FeedLine();
 //        csnCanvas.POS_FeedLine();

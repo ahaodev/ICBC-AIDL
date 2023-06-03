@@ -133,7 +133,7 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
                 .setDirection(direction)
                 .setOffsetX(offsetX).setOffsetY(offsetY);
         csnCanvas.CanvasBegin(pBuilder.pageW, pBuilder.pageH);
-        csnCanvas.SetPrintDirection(1);
+        csnCanvas.SetPrintDirection(0);
         return 0;
     }
 
@@ -176,13 +176,14 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
 //        mPos.POS_S_Align(align);
 //        mPos.POS_TextOut(text, 0, iLeft, 1, fontSize/100, 0, 0);
 //        mPos.POS_FeedLine();
+        csnCanvas.DrawText(text, 50, 50, -1, null, 10, 0);
         es.submit(new Runnable() {
             @Override
             public void run() {
                 csnCanvas.DrawText(text, getX(align, iLeft), getY(iTop), convertAlign(align), null, fontSize, 0);
-
             }
         });
+
         Log.d(TAG, "addText: text=" + text);
         Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
         return 0;
@@ -227,6 +228,7 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
         int iTop = format.getInt("iTop");
         int expectedHeight = format.getInt("expectedHeight");
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight + " qrCode=" + qrCode);
+        csnCanvas.DrawQRCode(qrCode, 100, 100, 0, 16, 0, 1);
         es.submit(new Runnable() {
             @Override
             public void run() {
@@ -271,10 +273,7 @@ public class CanvasPrinter implements CSNIOCallBack, IProxyPrinter {
     @Override
     public int endPrintDoc() {
         Log.d(TAG, "endPrintDoc: 结束打印任务");
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FeedLine();
-//        csnCanvas.POS_FullCutPaper();
+
         csnCanvas.CanvasEnd();
         csnCanvas.CanvasPrint(1, 0);
         return 0;

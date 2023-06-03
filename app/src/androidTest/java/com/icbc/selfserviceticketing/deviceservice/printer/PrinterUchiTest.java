@@ -11,132 +11,120 @@ public class PrinterUchiTest {
     }
 
     public void printer() {
-        android.os.Bundle pageBundle = new Bundle();
+        Bundle pageBundle = new Bundle();
         pageBundle.putInt("pageW", 72);
-        pageBundle.putInt("pageH", 100);
+        pageBundle.putInt("pageH", 72);
         pageBundle.putInt("OffsetX", 0);
         pageBundle.putInt("OffsetY", 0);
         pageBundle.putInt("direction", 0);
         printer.setPageSize(pageBundle);
 
-
-        TextBuilder textBuilder = new TextBuilder();
+        // addText: text=票券名称 fontSize=14 rotation=0 iLeft=0 iTop=0 align=1 pageWidth=72
+        TextBuilder pjBuilder = new TextBuilder();
         String text = "票券名称";
-        textBuilder.fontSize = 44;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 0;
-        textBuilder.iTop = 14;
-        textBuilder.align = 1;
-        textBuilder.pageWidth = 92;
-        printerText(printer, text, textBuilder);
+        pjBuilder.fontSize = 14;
+        pjBuilder.rotation = 0;
+        pjBuilder.iLeft = 0;
+        pjBuilder.iTop = 0;
+        pjBuilder.align = 1;
+        pjBuilder.pageWidth = 70;
+        printerText(printer, text, pjBuilder);
+        /*
+            addQrCode: iLeft=1 iTop=6 expectedHeight=25 qrCode=34027290657570<MjAwMDAwMTkyNDIwMjMtMDYtMDMyMDIzLTA2LTAz>
+         */
+        Bundle qrBundle = new Bundle();
+        qrBundle.putInt("iLeft", 1);
+        qrBundle.putInt("iTop", 6);
+        qrBundle.putInt("expectedHeight", 25);
+        printer.addQrCode(qrBundle, "34027290657570<MjAwMDAwMTkyNDIwMjMtMDYtMDMyMDIzLTA2LTAz>");
+
         /**
-         * addText: text=票券编号
-         * addText: fontSize=14 rotation=0 iLeft=3 iTop=35 align=1 pageWidth=29
+         addText: text=票券编号 fontSize=14 rotation=0 iLeft=29 iTop=8 align=1 pageWidth=30
          */
         TextBuilder numberBuilder = new TextBuilder();
         String noTitle = "票券编号";
-        textBuilder.fontSize = 14;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 3;
-        textBuilder.iTop = 35;
-        textBuilder.align = 1;
-        textBuilder.pageWidth = 29;
+        numberBuilder.fontSize = 14;
+        numberBuilder.rotation = 0;
+        numberBuilder.iLeft = 29;
+        numberBuilder.iTop = 8;
+        numberBuilder.align = 1;
+        numberBuilder.pageWidth = 30;
         printerText(printer, noTitle, numberBuilder);
         /**
-         * addText: text=订单号
-         * addText: fontSize=44 rotation=0 iLeft=3 iTop=56 align=1 pageWidth=69
+         addText: text=证件号码 fontSize=14 rotation=0 iLeft=29 iTop=18 align=1 pageWidth=30
          */
         TextBuilder dingdanBuilder = new TextBuilder();
-        String dingdanTitle = "订单号";
-        textBuilder.fontSize = 44;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 3;
-        textBuilder.iTop = 56;
-        textBuilder.align = 1;
-        textBuilder.pageWidth = 69;
+        String dingdanTitle = "证件号码";
+        dingdanBuilder.fontSize = 14;
+        dingdanBuilder.rotation = 0;
+        dingdanBuilder.iLeft = 29;
+        dingdanBuilder.iTop = 18;
+        dingdanBuilder.align = 1;
+        dingdanBuilder.pageWidth = 30;
         printerText(printer, dingdanTitle, dingdanBuilder);
         /*
-         *  addText: text=销售渠道
-         *  addText: fontSize=14 rotation=0 iLeft=7 iTop=80 align=0 pageWidth=29
+       addText: text=从前有座山山里有做吧 fontSize=14 rotation=0 iLeft=3 iTop=35 align=1 pageWidth=66
          */
         TextBuilder qdBuilder = new TextBuilder();
-        String qdTitle = "订单号";
-        textBuilder.fontSize = 14;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 7;
-        textBuilder.iTop = 80;
-        textBuilder.align = 0;
-        textBuilder.pageWidth = 29;
+        String qdTitle = "从前有座山山里有做吧";
+        qdBuilder.fontSize = 14;
+        qdBuilder.rotation = 0;
+        qdBuilder.iLeft = 3;
+        qdBuilder.iTop = 35;
+        qdBuilder.align = 1;
+        qdBuilder.pageWidth = 66;
         printerText(printer, qdTitle, qdBuilder);
-        /**
-         *   addQrCode: iLeft=14 iTop=94 expectedHeight=24
-         */
-        android.os.Bundle qrBundle = new Bundle();
-        qrBundle.putInt("iLeft", 14);
-        qrBundle.putInt("iTop", 95);
-        qrBundle.putInt("expectedHeight", 24);
-        printer.addQrCode(qrBundle, "草泥马");
-        /*    addText: text=0元门票
-         *    addText: fontSize=44 rotation=0 iLeft=92 iTop=14 align=1 pageWidth=48
+
+        /*
+          票券编号
+          addText: text=hao88打印测试票 fontSize=14 rotation=0 iLeft=0 iTop=6 align=0 pageWidth=71
          */
         TextBuilder moneyBuilder = new TextBuilder();
-        String money = "0元门票";
-        textBuilder.fontSize = 44;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 92;
-        textBuilder.iTop = 14;
-        textBuilder.align = 1;
-        textBuilder.pageWidth = 48;
+        String money = "hao88打印测试票";
+        moneyBuilder.fontSize = 14;
+        moneyBuilder.rotation = 0;
+        moneyBuilder.iLeft = 0;
+        moneyBuilder.iTop = 6;
+        moneyBuilder.align = 0;
+        moneyBuilder.pageWidth = 71;
         printerText(printer, money, moneyBuilder);
-        /*    addText: text=T2306020016500600001
-         *    addText: fontSize=14 rotation=0 iLeft=32 iTop=35 align=1 pageWidth=54
+        /*
+        addText: text=T2306030010502600002 fontSize=14 rotation=0 iLeft=29 iTop=14 align=0 pageWidth=71
          */
         TextBuilder tBuilder = new TextBuilder();
-        String t = "T2306020016500600001";
-        textBuilder.fontSize = 14;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 32;
-        textBuilder.iTop = 35;
-        textBuilder.align = 1;
-        textBuilder.pageWidth = 54;
+        String t = "T2306030010502600002";
+        tBuilder.fontSize = 14;
+        tBuilder.rotation = 0;
+        tBuilder.iLeft = 29;
+        tBuilder.iTop = 14;
+        tBuilder.align = 0;
+        tBuilder.pageWidth = 71;
         printerText(printer, t, tBuilder);
-        /*    addText: text=MO202306020000080470
-         *    addText: fontSize=44 rotation=0 iLeft=72 iTop=56 align=1 pageWidth=47
+        /*
+       addText: text= fontSize=14 rotation=0 iLeft=29 iTop=24 align=0 pageWidth=71
          */
         TextBuilder mBuilder = new TextBuilder();
-        String m = "MO202306020000080470";
-        textBuilder.fontSize = 44;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 72;
-        textBuilder.iTop = 56;
-        textBuilder.align = 1;
-        textBuilder.pageWidth = 47;
+        String m = "aaa";
+        mBuilder.fontSize = 14;
+        mBuilder.rotation = 0;
+        mBuilder.iLeft = 29;
+        mBuilder.iTop = 24;
+        mBuilder.align = 0;
+        mBuilder.pageWidth = 71;
         printerText(printer, m, mBuilder);
 
-        /*    addText: text=自助售票机
-         *    addText: fontSize=14 rotation=0 iLeft=37 iTop=80 align=0 pageWidth=54
-         */
-        TextBuilder zzBuilder = new TextBuilder();
-        String zz = "MO202306020000080470";
-        textBuilder.fontSize = 14;
-        textBuilder.rotation = 0;
-        textBuilder.iLeft = 37;
-        textBuilder.iTop = 80;
-        textBuilder.align = 0;
-        textBuilder.pageWidth = 54;
-        printerText(printer, zz, zzBuilder);
-
-        printer.startPrintDoc();
+        printer.endPrintDoc();
         printer.CloseDevice(1);
     }
 
     private void printerText(IProxyPrinter printer, String text, TextBuilder textBuilder) {
-        android.os.Bundle textBuild = new Bundle();
+        Bundle textBuild = new Bundle();
         textBuild.putInt("fontSize", textBuilder.fontSize);
         textBuild.putInt("rotation", textBuilder.rotation);
         textBuild.putInt("iLeft", textBuilder.iLeft);
         textBuild.putInt("iTop", textBuilder.iTop);
         textBuild.putInt("pageWidth", textBuilder.pageWidth);
+        textBuild.putInt("align", textBuilder.align);
         printer.addText(textBuild, text);
     }
 }

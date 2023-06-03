@@ -1,13 +1,19 @@
 package com.icbc.selfserviceticketing.deviceservice.printer;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
 public class IProxyPrinterTest {
@@ -21,6 +27,54 @@ public class IProxyPrinterTest {
         //testPrinterICBCTest(printer);
         printer.endPrintDoc();
         printer.CloseDevice(1);
+    }
+
+    @Test
+    public void printHaoImg() throws InterruptedException {
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        IProxyPrinter printer = new HaoPrinter(appContext);
+        Thread.sleep(1000);
+        PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
+        uchiTest.printer();
+        //testPrinterICBCTest(printer);
+        printer.endPrintDoc();
+        printer.CloseDevice(1);
+    }
+
+    @Test
+    public void printBitmapTest() throws InterruptedException {
+        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        IProxyPrinter printer = new LinePrinter(appContext);
+        Thread.sleep(1000);
+        android.os.Bundle format = new Bundle();
+        format.putInt("rotation", 1);
+        format.putInt("iLeft", 1);
+        format.putInt("iTop", 1);
+        format.putInt("iWidth", 576);
+        format.putInt("iHeight", 1);
+//        QRCodeUtils qrCodeUtils = new QRCodeUtils();
+//        Bitmap bitmap = qrCodeUtils.generateImage("HAHAH", 200);
+//        Bitmap printerImg = qrCodeUtils.createCustomBitmap(bitmap, "卧槽");
+        BitmapPrinter bPrinter = new BitmapPrinter();
+//        bPrinter.drawQrCode("卧槽你打野",200,10,10);
+//        bPrinter.drawText("卧槽你打野",10,10);
+        Bitmap printerImg = bPrinter.drawEnd();
+        String bas64 = bitmapToBase64(printerImg);
+        printer.addImage(format, bas64);
+        printer.CloseDevice(1);
+        //bPrinter.recycle();
+    }
+
+    public static String bitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        try {
+            byteArrayOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return Base64.encodeToString(byteArray, byteArray.length);
     }
 
     private void testPrinterICBCTest(IProxyPrinter printer) {

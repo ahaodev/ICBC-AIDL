@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
  * 8 dots/mm(203dpi)
  * 72mm
  */
-public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
+public class HaoPrinter implements CSNIOCallBack, IProxyPrinter {
     public static int nPrintWidth = 800;//384
     public static boolean bCutter = false;
     public static boolean bDrawer = false;
@@ -46,14 +46,15 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
     Context context;
     public int printerStatus = 0;
     private Builder builder = new Builder();
+    BitmapPrinter bitmapPrinter;
 
-    public LinePrinter(Context applicationContext) {
+    public HaoPrinter(Context applicationContext) {
         this.context = applicationContext;
         openDevice();
     }
 
     @Override
-    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam)  {
+    public int OpenDevice(int DeviceID, String deviceFile, String szPort, String szParam) {
         return 0;
     }
 
@@ -79,7 +80,7 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
     }
 
     @Override
-    public int CloseDevice(int DeviceID)  {
+    public int CloseDevice(int DeviceID) {
         es.submit(new TaskClose(mUsb));
         Log.d(TAG, "CloseDevice: ");
         return 0;
@@ -92,7 +93,7 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int getStatus()  {
+    public int getStatus() {
         byte[] status = new byte[1];
         boolean usable = mPos.POS_QueryStatus(status, 2000, 2);
 //        return usable ? 0 : 1;
@@ -108,7 +109,7 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int setPageSize(Bundle format)  {
+    public int setPageSize(Bundle format) {
         /**
          * format – 指定打印设置格式
          * pageW(int)：纸张宽度（毫米），不能大于门票纸，否则可能导致定位
@@ -137,6 +138,8 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
                 .setOffsetX(offsetX)
                 .setOffsetY(offsetY);
         Log.d(TAG, "setPageSize: " + builder.toString());
+        bitmapPrinter =new BitmapPrinter();
+        bitmapPrinter.setPageSize(pageW * 8, pageH * 8, direction, offsetX, offsetY);
         return 0;
     }
 
@@ -147,13 +150,13 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int startPrintDoc()  {
+    public int startPrintDoc() {
         mPos.POS_Reset();
         return 0;
     }
 
     @Override
-    public int addText(Bundle format, String text)  {
+    public int addText(Bundle format, String text) {
         /**
          * fontName(Sting)：字体名称，安卓下使用的字体文件必须放在
          * asset\font 目录下，例如填： FZLTXHJW.TTF ， 则该字体文件存
@@ -173,19 +176,14 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
         int iTop = format.getInt("iTop");
         int align = format.getInt("align");
         int pageWidth = format.getInt("pageWidth");
-        mPos.POS_S_Align(align);
-        int nOrgx = (int) Utils.millimetersToPixels(iLeft);//指定 X 方向（水平）的起始点位置离左边界的点数。 2 寸打印机一行 384 点，3 寸打印机一行 576 点。
-        int nHeightTimes = fontSize / 100;//字体大小
-        int nLan = 0;//nLan 0-GBK 1-UTF8 3-BIG5 4-SHIFT-JIS 5-EUC-KR
-        mPos.POS_TextOut(text, nLan, nOrgx, 1, nHeightTimes, 0, 0);
-        mPos.POS_FeedLine();
+        bitmapPrinter.addText(text, fontSize, rotation, iLeft * 8, iTop * 8, align, pageWidth);
         Log.d(TAG, "addText: text=" + text);
         Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
         return 0;
     }
 
     @Override
-    public int addQrCode(Bundle format, String qrCode)  {
+    public int addQrCode(Bundle format, String qrCode) {
         /**
          * iLeft(int): 距离左边距离,单位 mm
          * iTop(int): 距离顶部距离,单位 mm
@@ -197,14 +195,14 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
         int expectedHeight = format.getInt("expectedHeight");//16
         //宽 1~16
         int nWidthX = (expectedHeight / builder.pageW) * 16;
-        mPos.POS_S_SetQRcode(qrCode, 16, 0, 1);
+        bitmapPrinter.addQrCode(iLeft * 8, iTop * 8, expectedHeight, qrCode);
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight);
         return 0;
     }
 
     @Override
-    public int addImage(Bundle format, String imageData)  {
-        byte[] bytes = android.util.Base64.decode(imageData, Base64.DEFAULT);
+    public int addImage(Bundle format, String imageData) {
+        byte[] bytes = Base64.decode(imageData, Base64.DEFAULT);
         Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         //format –打印格式，可设置打印的位置、宽度、高度
         //rotation(int)：旋转角度，0，90，180，270 四个角度
@@ -228,7 +226,9 @@ public class LinePrinter implements CSNIOCallBack, IProxyPrinter {
      * @
      */
     @Override
-    public int endPrintDoc()  {
+    public int endPrintDoc() {
+        Bitmap bitmap = bitmapPrinter.drawEnd();
+        mPos.POS_PrintPicture(bitmap, bitmap.getWidth(), 1, 0);
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();

@@ -4,12 +4,16 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
 import android.util.Log
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import java.util.*
+import kotlin.math.roundToInt
 
 /**
 openDevice: device =  VID:0FE6 PID:811EVendorId=4070ProductId=33054
@@ -34,7 +38,9 @@ class BitmapPrinter {
     private lateinit var bitmap: Bitmap
     private lateinit var canvas: Canvas
 
-    private var mPaint: Paint = Paint().apply {
+    private var mPaint: Paint = Paint()
+
+    private var textPaint: TextPaint = TextPaint().apply {
         style = Paint.Style.STROKE
     }
 
@@ -57,38 +63,67 @@ class BitmapPrinter {
     pageWidth(int)：文本打印宽度，单位:MM，如果内容超过宽度会自动换行
      */
     fun addText(
-        text: String = "票券名称",
-        fontSize: Int = 20,
-        rotation: Int = 0,
-        iLeft: Int = 0,
-        iTop: Int = 0,
-        align: Int = 1,
-        pageWidth: Int = 71
+        text: String,
+        fontSize: Int,
+        rotation: Int,
+        iLeft: Int,
+        iTop: Int,
+        align: Int,
+        pageWidth: Int
     ) {
-        mPaint.textSize = fontSize.toFloat() // 设置字体大小
-        var x = when (align) {
+        var alignment = when (align) {
             0 -> {
-                0 + iLeft
+                Layout.Alignment.ALIGN_NORMAL
             }
             1 -> {
-                canvas.width / 2 - mPaint.measureText(text)
+                Layout.Alignment.ALIGN_CENTER
             }
             2 -> {
-                canvas.width - mPaint.measureText(text)
+                Layout.Alignment.ALIGN_OPPOSITE
             }
             else -> {
-                align
+                Layout.Alignment.ALIGN_NORMAL
             }
         }
+        var x = iLeft
+//        if (alignment == Layout.Alignment.ALIGN_CENTER) {
+//            x += (bitmap.width - pageWidth) / 2
+//        }
         var y = iTop
-        drawText(text, x.toFloat(), y.toFloat())
+        val measureTextWidth = textPaint.measureText(text)//测量宽
+        Log.d(TAG, "measureTextWidth: $measureTextWidth")
+        var layoutWidth: Int =
+            if (pageWidth > measureTextWidth) pageWidth else measureTextWidth.roundToInt()//选择大的
+
+        if (layoutWidth > (72 * 8)) {
+            layoutWidth = 72 * 8 - iLeft
+        }
+        drawText(text, fontSize, x.toFloat(), y.toFloat(), layoutWidth, alignment)
     }
 
-    private fun drawText(text: String, x: Float, y: Float) {
-        mPaint.color = Color.BLACK
-        mPaint.style = Paint.Style.FILL
-        canvas.drawText(text, x, y, mPaint)
-        Log.d(TAG, "drawText: text=$text x=$x y=$y")
+    private fun drawText(
+        text: String,
+        textSize: Int,
+        x: Float,
+        y: Float,
+        textWidth: Int,
+        align: Layout.Alignment
+    ) {
+        textPaint.textSize = textSize * 1.5f // 设置字体大小
+        textPaint.color = Color.BLACK
+        textPaint.style = Paint.Style.FILL
+
+        val staticLayout = StaticLayout.Builder.obtain(
+            text, 0, text.length, textPaint, textWidth
+        )
+            .setAlignment(align)
+            .build()
+        canvas.save() // 保存当前 Canvas 状态
+        canvas.translate(x, y) // 平移 Canvas，将区域放置在指定位置
+        staticLayout.draw(canvas) // 绘制文本布局
+        canvas.restore() // 恢复 Canvas 状态
+        //canvas.drawText(text, x, y, mPaint)
+        Log.d(TAG, "bitmap drawText: $text x=$x y=$y textWidth=$textWidth")
     }
 
     /**
@@ -120,6 +155,8 @@ class BitmapPrinter {
 
     fun drawEnd(): Bitmap {
         //canvas.restore()
+        mPaint.style = Paint.Style.STROKE
+        canvas.drawRect(1f, 2f, bitmap.width - 2f, bitmap.height - 1f, mPaint)
         return bitmap
     }
 

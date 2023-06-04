@@ -176,9 +176,8 @@ public class HaoPrinter implements CSNIOCallBack, IProxyPrinter {
         int iTop = format.getInt("iTop");
         int align = format.getInt("align");
         int pageWidth = format.getInt("pageWidth");
-        bitmapPrinter.addText(text, fontSize, rotation, iLeft * 8, iTop * 8, align, pageWidth);
-        Log.d(TAG, "addText: text=" + text);
-        Log.d(TAG, "addText: fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
+        Log.d(TAG, "addText: text=" + text+" fontSize=" + fontSize + " rotation=" + rotation + " iLeft=" + iLeft + " iTop=" + iTop + " align=" + align + " pageWidth=" + pageWidth);
+        bitmapPrinter.addText(text, fontSize, rotation, iLeft * 8, iTop * 8, align, pageWidth*8);
         return 0;
     }
 
@@ -227,11 +226,16 @@ public class HaoPrinter implements CSNIOCallBack, IProxyPrinter {
      */
     @Override
     public int endPrintDoc() {
+        Log.d(TAG, "endPrintDoc: 打印整个图像");
         Bitmap bitmap = bitmapPrinter.drawEnd();
         mPos.POS_PrintPicture(bitmap, bitmap.getWidth(), 1, 0);
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();
+        mPos.POS_FeedLine();
+        mPos.POS_FeedLine();
+        mPos.POS_FeedLine();
+        mPos.POS_HalfCutPaper();
         //mPos.POS_FullCutPaper();
         return 0;
     }

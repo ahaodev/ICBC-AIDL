@@ -12,7 +12,7 @@ public class PrinterProxy extends IPrinter.Stub {
 
     public PrinterProxy(Context context) {
         this.context = context;
-        mProxyPrinter = new PagePrinter(context);
+        mProxyPrinter = new HaoPrinter(context);
     }
 
     @Override
@@ -42,6 +42,7 @@ public class PrinterProxy extends IPrinter.Stub {
 
     @Override
     public int addText(Bundle format, String text) throws RemoteException {
+        if (null==text||text.isEmpty())return 0;
         return mProxyPrinter.addText(format, text);
     }
 

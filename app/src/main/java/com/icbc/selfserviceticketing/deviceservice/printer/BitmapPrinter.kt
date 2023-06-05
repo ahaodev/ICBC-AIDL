@@ -156,7 +156,7 @@ class BitmapPrinter {
     fun drawEnd(): Bitmap {
         //canvas.restore()
         mPaint.style = Paint.Style.STROKE
-        canvas.drawRect(1f, 2f, bitmap.width - 2f, bitmap.height - 1f, mPaint)
+        canvas.drawRect(2f, 5f, bitmap.width - 2f, bitmap.height - 1f, mPaint)
         return bitmap
     }
 

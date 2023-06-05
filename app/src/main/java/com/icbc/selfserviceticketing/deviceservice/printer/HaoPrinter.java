@@ -233,8 +233,6 @@ public class HaoPrinter implements CSNIOCallBack, IProxyPrinter {
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();
         mPos.POS_FeedLine();
-        mPos.POS_FeedLine();
-        mPos.POS_FeedLine();
         mPos.POS_HalfCutPaper();
         //mPos.POS_FullCutPaper();
         return 0;

@@ -98,6 +98,8 @@ class BitmapPrinter {
         if (layoutWidth > (72 * 8)) {
             layoutWidth = 72 * 8 - iLeft
         }
+        if ("票券名称" == text)
+            layoutWidth+=4
         drawText(text, fontSize, x.toFloat(), y.toFloat(), layoutWidth, alignment)
     }
 
@@ -156,7 +158,7 @@ class BitmapPrinter {
     fun drawEnd(): Bitmap {
         //canvas.restore()
         mPaint.style = Paint.Style.STROKE
-        canvas.drawRect(2f, 5f, bitmap.width - 2f, bitmap.height - 1f, mPaint)
+        //canvas.drawRect(2f, 5f, bitmap.width - 2f, bitmap.height - 1f, mPaint)
         return bitmap
     }
 

@@ -38,7 +38,8 @@ class DeviceService : Service() {
 
             @Throws(RemoteException::class)
             override fun getIIDCard(): IIDCard {
-                return IDCardProxy(this@DeviceService, scope)
+//                return IDCardProxy(this@DeviceService, scope)
+                return IDCard(applicationContext)
             }
 
             @Throws(RemoteException::class)

@@ -207,10 +207,11 @@ public class IDCard extends IIDCard.Stub {
                         bundle.putString("IDEffectiveDate", split[0]);
                         bundle.putString("IDExpiryDate", split[1]);
                         if (idCardInfo.getPhotolength() > 0) {
-                            byte[] buf = new byte[WLTService.imgLength];
-                            if (1 == WLTService.wlt2Bmp(idCardInfo.getPhoto(), buf)) {
-                                bundle.putParcelable("IDImage", IDPhotoHelper.Bgr2Bitmap(buf));
-                            }
+                            //ＷＬＴ照片数据转码错误
+//                            byte[] buf = new byte[WLTService.imgLength];
+//                            if (1 == WLTService.wlt2Bmp(idCardInfo.getPhoto(), buf)) {
+//                                bundle.putParcelable("IDImage", IDPhotoHelper.Bgr2Bitmap(buf));
+//                            }
                         }
                     }
                     successCallBack(bundle);

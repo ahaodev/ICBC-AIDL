@@ -6,6 +6,7 @@ import android.os.IBinder
 import android.os.RemoteException
 import com.icbc.selfserviceticketing.deviceservice.idcard.IDCardProxy
 import com.icbc.selfserviceticketing.deviceservice.printer.PrinterProxy
+import com.icbc.selfserviceticketing.deviceservice.scanner.ScannerSuperLead
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -23,7 +24,9 @@ class DeviceService : Service() {
 
             @Throws(RemoteException::class)
             override fun getScanner(cameraId: Int): IScanner {
-                return ScannerSuperLead(applicationContext)
+                return ScannerSuperLead(
+                    applicationContext
+                )
             }
 
             @Throws(RemoteException::class)
@@ -38,8 +41,8 @@ class DeviceService : Service() {
 
             @Throws(RemoteException::class)
             override fun getIIDCard(): IIDCard {
-//                return IDCardProxy(this@DeviceService, scope)
-                return IDCard(applicationContext)
+                return IDCardProxy(this@DeviceService, scope)
+                //return IDCard(applicationContext)
             }
 
             @Throws(RemoteException::class)

@@ -1,4 +1,4 @@
-package com.icbc.selfserviceticketing.deviceservice;
+package com.icbc.selfserviceticketing.deviceservice.scanner;
 
 import static android.content.Context.USB_SERVICE;
 
@@ -13,6 +13,9 @@ import android.util.Log;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
+import com.icbc.selfserviceticketing.deviceservice.HexDump;
+import com.icbc.selfserviceticketing.deviceservice.IScanner;
+import com.icbc.selfserviceticketing.deviceservice.ScannerListener;
 
 import java.io.IOException;
 import java.util.List;

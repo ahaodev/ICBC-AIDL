@@ -180,6 +180,7 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
         idrparams[ParameterHelper.PARAM_KEY_PID] = PID
         idCardReader = IDCardReaderFactory.createIDCardReader(context, TransportType.USB, idrparams)
         idCardReader?.SetBaudRate(115200)
+        idCardReader?.setLibusbFlag(true)
     }
 
     private fun closeDevice() {

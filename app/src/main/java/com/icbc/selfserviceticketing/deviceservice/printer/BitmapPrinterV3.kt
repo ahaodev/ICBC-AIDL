@@ -112,7 +112,6 @@ class BitmapPrinterV3 {
         drawText(text, fontSize, x.toFloat(), y.toFloat(), layoutWidth, alignment)
     }
 
-    @RequiresApi(Build.VERSION_CODES.M)
     private fun drawText(
         text: String,
         textSize: Int,

@@ -11,7 +11,8 @@ android {
 
     defaultConfig {
         applicationId "com.icbc.selfserviceticketing.deviceservice"
-        minSdk 21
+        //25 7.1
+        minSdk 25
         targetSdk 30
         versionCode 103
         versionName "1.0.3"

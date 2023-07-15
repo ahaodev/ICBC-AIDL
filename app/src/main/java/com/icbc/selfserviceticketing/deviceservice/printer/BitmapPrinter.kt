@@ -34,10 +34,6 @@ addText: text= fontSize=14 rotation=0 iLeft=20 iTop=79 align=0 pageWidth=71
 addText: text=2023-06-02 fontSize=14 rotation=0 iLeft=20 iTop=87 align=0 pageWidth=71
 endPrintDoc: 结束打印任务
 
-
-
-
-
  target art 80 hot printer
  */
 class BitmapPrinter {

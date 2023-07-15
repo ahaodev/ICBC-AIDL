@@ -40,10 +40,10 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
     private var idCall: ((Int, String, Bundle) -> Unit)? = null
 
     companion object {
-        const val VID = 6790 //IDR VID
+//        const val VID = 6790 //IDR VID
         const val mVendorId = 1024 //IDR VID
         const val mProductId = 50010 //IDR VID
-        const val PID = 29987 //IDR PID
+//        const val PID = 29987 //IDR PID
         const val TAG = "IDM40"
     }
 
@@ -176,8 +176,8 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
         LogHelper.setLevel(Log.VERBOSE)
         // Start fingerprint sensor
         val idrparams: MutableMap<String, Any> = HashMap()
-        idrparams[ParameterHelper.PARAM_KEY_VID] = VID
-        idrparams[ParameterHelper.PARAM_KEY_PID] = PID
+        idrparams[ParameterHelper.PARAM_KEY_VID] = mVendorId
+        idrparams[ParameterHelper.PARAM_KEY_PID] = mProductId
         idCardReader = IDCardReaderFactory.createIDCardReader(context, TransportType.USB, idrparams)
         idCardReader?.SetBaudRate(115200)
         idCardReader?.setLibusbFlag(true)

@@ -18,9 +18,9 @@ android {
         versionName "1.0.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-//        ndk {
-//            abiFilters 'armeabi-v7a'
-//        }
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
     }
 
     buildTypes {
@@ -33,14 +33,20 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    packagingOptions {
-        exclude '/jni/armeabi-v7a/libserial_port.so'
+    sourceSets{
+        main{
+            jniLibs.srcDirs = ['src/main/jniLibs']
+        }
     }
+//    packagingOptions {
+//        exclude '/jni/armeabi-v7a/libserial_port.so'
+//    }
 }
 
 dependencies {
     implementation files('libs\\core-3.2.1.jar')
     implementation files('libs\\tscsdk.jar')
+    implementation files('libs\\zkandroidcore.jar')
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'

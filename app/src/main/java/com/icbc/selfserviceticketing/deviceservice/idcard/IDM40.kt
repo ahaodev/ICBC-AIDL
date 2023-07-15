@@ -75,6 +75,8 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
     private var readICListener: ((String) -> Unit?)? = null
 
     private fun start(idCall: (Int, String, Bundle) -> Unit) {
+        if (enableReadID)
+            return
         enableReadID = true
         this.idCall=idCall
         initDevice()

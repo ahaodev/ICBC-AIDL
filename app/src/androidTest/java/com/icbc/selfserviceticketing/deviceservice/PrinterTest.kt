@@ -55,8 +55,8 @@ class PrinterTest {
                 val status = with(printer) {
                     OpenDevice(1, "", "", "")
                     setPageSize(Bundle().apply {
-                        putInt("pageW", 76)
-                        putInt("pageH", 56)
+                        putInt("pageW", 80)
+                        putInt("pageH", 60)
                         putInt("direction", 0)
                         putInt("OffsetX", 0)
                         putInt("OffsetY", 0)

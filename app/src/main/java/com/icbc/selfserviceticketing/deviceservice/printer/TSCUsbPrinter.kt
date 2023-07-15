@@ -16,7 +16,6 @@ import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
-import kotlin.math.log
 
 class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     companion object {
@@ -28,19 +27,18 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         private val MAX_USBFS_BUFFER_SIZE = 10000
         private var DPI = 12
         private var TIMEOUT = 1000
-        val TAG = "MainActivity"
+        val TAG = "TSCUsbPrinter"
 
     }
 
-    private val builder = Builder()
+
     private var usbEndpointIn: UsbEndpoint? = null
     private var usbEndpointOut: UsbEndpoint? = null
     private var mUsbConnection: UsbDeviceConnection? = null
     private var mUsbendpoint: UsbEndpoint? = null
     private var mUsbIntf: UsbInterface? = null
-    val bitmapPrinter = BitmapPrinterV3().apply {
+    var bitmapPrinter = BitmapPrinterV3().apply {
         debug = true
-        dpi = 12
     }
     private var mUsbDevice: UsbDevice? = null
 
@@ -50,7 +48,6 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             val action = intent.action
             if (ACTION_USB_PERMISSION == action) {
                 synchronized(this) {
-                    Log.d(TAG, "onReceive: 监听设备")
                     mUsbDevice =
                         intent.getParcelableExtra<Parcelable>(UsbManager.EXTRA_DEVICE) as UsbDevice?
                     if (intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
@@ -67,8 +64,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         onInit()
     }
 
-    private fun onInit(): Int {
-        Log.d(TAG, "onInit: 初始化")
+    fun onInit(): Int {
         mUsbManager = context.getSystemService(Activity.USB_SERVICE) as UsbManager
         mPermissionIntent = PendingIntent.getBroadcast(
             context,
@@ -103,10 +99,9 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     fun connectUsbPrinter(): Int {
-        Log.d(TAG, "connectUsbPrinter: 连接打印机")
         if (!mUsbManager!!.hasPermission(device)) {
             Log.e(TAG, "connectUsbPrinter: USB无访问权限")
-            1
+            return 1
         }
 
         openPort(
@@ -117,7 +112,6 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     fun printerBitMap(bitmap: Bitmap) {
-        Log.d(TAG, "printerBitMap: 打印图片")
         Log.d(TAG, "onCreate: 开始打印")
         val pageCmd = "SIZE 76 mm,60 mm\r\n"
         Log.d(TAG, "sendCMD: ${pageCmd}")
@@ -127,15 +121,9 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         sendBitmap(0, 0, bitmap)
         sendCommand("")
         sendCommand("PRINT 1\r\n")
-        try {
-            Thread.sleep(1000)
-        } catch (e: InterruptedException) {
-            e.printStackTrace()
-        }
     }
 
     private fun openPort(usbManager: UsbManager, device: UsbDevice): Boolean {
-        Log.d(TAG, "openPort: 打开端口")
         this.mUsbIntf = device!!.getInterface(0)
         mUsbendpoint = mUsbIntf!!.getEndpoint(0)
         mUsbConnection = usbManager.openDevice(device)
@@ -158,10 +146,9 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         return portStatus
     }
 
-    private fun closePort(): Int {
-        Log.d(TAG, "closePort: 关闭端口")
+    private fun closePort(): Boolean {
         if (mUsbConnection == null) {
-            return 1
+            return false
         }
 
         runCatching {
@@ -181,15 +168,14 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             mUsbDevice = null
             mUsbIntf = null
             Log.d(TAG, "Device closed. ")
-            0
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Exception: ${e.message}")
-            1
+            false
         }
     }
 
     private fun sendCommand(printerCommand: String): Boolean {
-        Log.d(TAG, "sendCommand: $printerCommand")
         if (mUsbConnection == null) {
             return false
         }
@@ -203,16 +189,46 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         }
 
         try {
-            Thread.sleep(50L)
+            Thread.sleep(200L)
         } catch (var4: InterruptedException) {
         }
 
         return true
     }
 
+    private fun sendCommandOld(printercommand: String): String? {
+        return if (mUsbConnection == null) {
+            "-1"
+        } else {
+            try {
+                Thread.sleep(100L)
+            } catch (var6: InterruptedException) {
+            }
+            val thread = Thread {
+                val command = printercommand.toByteArray()
+                mUsbConnection!!.bulkTransfer(
+                    mUsbendpoint,
+                    command,
+                    command.size,
+                    TIMEOUT
+                )
+            }
+            thread.start()
+            try {
+                thread.join()
+            } catch (var5: InterruptedException) {
+                var5.printStackTrace()
+            }
+            try {
+                Thread.sleep(50L)
+            } catch (var4: InterruptedException) {
+            }
+            "1"
+        }
+    }
+
     // 将位图转换为打印机可识别的字节流格式
     private fun sendBitmap(xCoordinates: Int = 0, yCoordinates: Int = 0, bitmap: Bitmap) {
-        Log.d(TAG, "sendBitmap: $xCoordinates,$yCoordinates")
         val x = xCoordinates.toString()
         val y = yCoordinates.toString()
 
@@ -328,135 +344,6 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         }
     }
 
-    override fun OpenDevice(
-        DeviceID: Int,
-        deviceFile: String?,
-        szPort: String?,
-        szParam: String?
-    ): Int {
-        Log.d(TAG, "OpenDevice: ")
-        return connectUsbPrinter()
-    }
-
-    override fun CloseDevice(DeviceID: Int): Int {
-        Log.d(TAG, "CloseDevice: ")
-        return closePort()
-    }
-
-    override fun getStatus(): Int {
-        Log.d(TAG, "getStatus: ")
-        return 0
-    }
-
-    override fun setPageSize(format: Bundle?): Int {
-        /**
-         * format – 指定打印设置格式
-         * pageW(int)：纸张宽度（毫米），不能大于门票纸，否则可能导致定位
-         * 错误
-         * pageH(int)：纸张高度（毫米），不能大于门票纸，否则可能导致定位错q
-         * 误
-         * direction(int)：打印起始坐标方向，0－出纸方向右下角为坐标原点，1
-         * －出纸方向左上角为坐标原点
-         * OffsetX(int)：左偏移量（毫米）,设置后，打印内容全部往左偏移指定位
-         * 置
-         * OffsetY(int)：上偏移量（毫米）,设置后，打印内容全部往下偏移指定位
-         * 置
-         */
-        val pageW = format!!.getInt("pageW")
-        val pageH = format!!.getInt("pageH")
-        val direction = format!!.getInt("direction")
-        val offsetX = format!!.getInt("OffsetX")
-        val offsetY = format!!.getInt("OffsetY")
-        Log.d(TAG, "setPageSize: pageW=$pageW")
-        Log.d(TAG, "setPageSize: pageH=$pageH")
-        Log.d(TAG, "setPageSize: direction=$direction")
-        Log.d(TAG, "setPageSize: OffsetX=$offsetX")
-        Log.d(TAG, "setPageSize: OffsetY=$offsetY")
-        builder.setPageH(pageH)
-            .setDirection(direction)
-            .setOffsetX(offsetX)
-            .setOffsetY(offsetY)
-        bitmapPrinter.setPageSize(pageW, pageH, direction, offsetX, offsetY)
-        return 0
-    }
-
-    override fun startPrintDoc(): Int {
-        Log.d(TAG, "startPrintDoc: ")
-        connectUsbPrinter()
-        return 0
-    }
-
-    override fun addText(format: Bundle?, text: String?): Int {
-        /**
-         * fontName(Sting)：字体名称，安卓下使用的字体文件必须放在
-         * asset\font 目录下，例如填： FZLTXHJW.TTF ， 则该字体文件存
-         * 放在项目的 asset\font\FZLTXHJW.TTF
-         * fontSize(int)：字体大小，一般设置为 10~16 大小
-         * rotation(int)：旋转角度，0，90，180，270 四个角度
-         * iLeft(int): 距离左边距离,单位 mm
-         * iTop(int): 距离顶部距离,单位 mm
-         * align(int)：对齐方式，默认左对齐，0:left, 1:center, 2:right
-         * pageWidth(int)：文本打印宽度，单位:MM，如果内容超过宽度会自动
-         * 换行
-         */
-        val fontName = format!!.getString("fontName")
-        val fontSize = format!!.getInt("fontSize")
-        val rotation = format!!.getInt("rotation")
-        val iLeft = format!!.getInt("iLeft")
-        val iTop = format!!.getInt("iTop")
-        val align = format!!.getInt("align")
-        val pageWidth = format!!.getInt("pageWidth")
-        Log.d(
-            TAG,
-            "addText: text=$text fontSize=$fontSize rotation=$rotation iLeft=$iLeft iTop=$iTop align=$align pageWidth=$pageWidth"
-        )
-        bitmapPrinter.addText(
-            text!!,
-            fontSize,
-            rotation,
-            iLeft * DPI,
-            iTop * DPI,
-            align,
-            pageWidth * DPI
-        )
-        return 0
-    }
-
-    override fun addQrCode(format: Bundle?, qrCode: String?): Int {
-        /**
-         * iLeft(int): 距离左边距离,单位 mm
-         * iTop(int): 距离顶部距离,单位 mm
-         * expectedHeight(int) - 期望高度，单位 mm
-         * qrCode – 二维码内容
-         */
-        /**
-         * iLeft(int): 距离左边距离,单位 mm
-         * iTop(int): 距离顶部距离,单位 mm
-         * expectedHeight(int) - 期望高度，单位 mm
-         * qrCode – 二维码内容
-         */
-        val iLeft = format!!.getInt("iLeft")
-        val iTop = format!!.getInt("iTop") //7
-
-        val expectedHeight = format!!.getInt("expectedHeight") //16
-
-        val nWidthX: Int = expectedHeight * DPI
-        bitmapPrinter.addQrCode(iLeft * DPI, iTop * DPI, nWidthX, qrCode!!)
-        Log.d(TAG, "addQrCode: iLeft=$iLeft iTop=$iTop expectedHeight=$expectedHeight")
-        return 0
-    }
-
-    override fun addImage(format: Bundle?, imageData: String?): Int {
-        Log.d(TAG, "addImage: ")
-        return 0
-    }
-
-    override fun endPrintDoc(): Int {
-        Log.d(TAG, "endPrintDoc: ")
-        val bitmap = bitmapPrinter.drawEnd()
-        printerBitMap(createBitmap())
-        return 0
-    }
     fun createBitmap(): Bitmap {
         bitmapPrinter.debug = true
         bitmapPrinter.setPageSize(pageW = 76.toPix(), pageH = 56.toPix())
@@ -551,11 +438,134 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         )
         return bitmapPrinter.drawEnd()
     }
+
     private fun Int.toPix(): Int {
         return (this * DPI).toInt()
 //        return if (this > 10)
 //            (this * 11.8).toInt()
 //        else
 //            this * DPI
+    }
+
+    override fun OpenDevice(
+        DeviceID: Int,
+        deviceFile: String?,
+        szPort: String?,
+        szParam: String?
+    ): Int {
+        return connectUsbPrinter()
+    }
+
+    override fun CloseDevice(DeviceID: Int): Int {
+//        bitmapPrinter.recycle()
+        return 0
+    }
+
+    override fun getStatus(): Int {
+        return 0
+    }
+
+    override fun setPageSize(format: Bundle?): Int {
+        /**
+         * format – 指定打印设置格式
+         * pageW(int)：纸张宽度（毫米），不能大于门票纸，否则可能导致定位
+         * 错误
+         * pageH(int)：纸张高度（毫米），不能大于门票纸，否则可能导致定位错q
+         * 误
+         * direction(int)：打印起始坐标方向，0－出纸方向右下角为坐标原点，1
+         * －出纸方向左上角为坐标原点
+         * OffsetX(int)：左偏移量（毫米）,设置后，打印内容全部往左偏移指定位
+         * 置
+         * OffsetY(int)：上偏移量（毫米）,设置后，打印内容全部往下偏移指定位
+         * 置
+         */
+        val pageW = format!!.getInt("pageW")
+        val pageH = format.getInt("pageH")
+        val direction = format.getInt("direction")
+        val offsetX = format.getInt("OffsetX")
+        val offsetY = format.getInt("OffsetY")
+        Log.d(TAG, "setPageSize: pageW=$pageW")
+        Log.d(TAG, "setPageSize: pageH=$pageH")
+        Log.d(TAG, "setPageSize: direction=$direction")
+        Log.d(TAG, "setPageSize: OffsetX=$offsetX")
+        Log.d(TAG, "setPageSize: OffsetY=$offsetY")
+
+        bitmapPrinter.setPageSize(
+            pageW.toPix(),
+            pageH.toPix(),
+            direction,
+            offsetX.toPix(),
+            offsetY.toPix()
+        )
+        return 0
+    }
+
+    override fun startPrintDoc(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun addText(format: Bundle, text: String): Int {
+        /**
+         * fontName(Sting)：字体名称，安卓下使用的字体文件必须放在
+         * asset\font 目录下，例如填： FZLTXHJW.TTF ， 则该字体文件存
+         * 放在项目的 asset\font\FZLTXHJW.TTF
+         * fontSize(int)：字体大小，一般设置为 10~16 大小
+         * rotation(int)：旋转角度，0，90，180，270 四个角度
+         * iLeft(int): 距离左边距离,单位 mm
+         * iTop(int): 距离顶部距离,单位 mm
+         * align(int)：对齐方式，默认左对齐，0:left, 1:center, 2:right
+         * pageWidth(int)：文本打印宽度，单位:MM，如果内容超过宽度会自动
+         * 换行
+         */
+        val fontName = format!!.getString("fontName")
+        val fontSize = format!!.getInt("fontSize")
+        val rotation = format!!.getInt("rotation")
+        val iLeft = format!!.getInt("iLeft")
+        val iTop = format!!.getInt("iTop")
+        val align = format!!.getInt("align")
+        val pageWidth = format!!.getInt("pageWidth")
+        Log.d(
+            TAG,
+            "addText: text=$text fontSize=$fontSize rotation=$rotation iLeft=$iLeft iTop=$iTop align=$align pageWidth=$pageWidth"
+        )
+        bitmapPrinter.addText(
+            text,
+            fontSize,
+            rotation,
+            iLeft.toPix(),
+            iTop.toPix(),
+            align,
+            pageWidth.toPix()
+        )
+        return 0
+    }
+
+    override fun addQrCode(format: Bundle?, qrCode: String?): Int {
+        /**
+         * iLeft(int): 距离左边距离,单位 mm
+         * iTop(int): 距离顶部距离,单位 mm
+         * expectedHeight(int) - 期望高度，单位 mm
+         * qrCode – 二维码内容
+         */
+        val iLeft = format!!.getInt("iLeft")
+        val iTop = format!!.getInt("iTop") //7
+        val expectedHeight = format!!.getInt("expectedHeight") //16
+        //宽 1~16
+        //宽 1~16
+        Log.d(TAG, "addQrCode: iLeft=$iLeft iTop=$iTop expectedHeight=$expectedHeight")
+        bitmapPrinter.addQrCode(iLeft.toPix(), iTop.toPix(), expectedHeight.toPix(), qrCode!!)
+        return 0
+    }
+
+    override fun addImage(format: Bundle?, imageData: String?): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun endPrintDoc(): Int {
+        val bitmap = bitmapPrinter.drawEnd()
+        printerBitMap(bitmap)
+        bitmap.recycle()
+        bitmapPrinter.recycle()
+        return 0
     }
 }

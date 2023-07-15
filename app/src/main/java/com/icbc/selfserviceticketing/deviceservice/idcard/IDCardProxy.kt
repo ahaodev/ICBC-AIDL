@@ -11,7 +11,7 @@ class IDCardProxy(context: Context, scope: CoroutineScope) : IIDCard.Stub() {
     private var iProxyIDCard: IProxyIDCard
 
     init {
-        iProxyIDCard = ID180v2(context, scope)
+        iProxyIDCard = IDM40(context, scope)
     }
 
 

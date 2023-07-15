@@ -20,7 +20,7 @@ public class IProxyPrinterTest {
     @Test
     public void printTest() throws InterruptedException {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        IProxyPrinter printer = new CanvasPrinter(appContext);
+        IProxyPrinter printer = new TSCUsbPrinter(appContext);
         Thread.sleep(1000);
         PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
         uchiTest.printer();

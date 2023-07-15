@@ -12,7 +12,7 @@ public class PrinterProxy extends IPrinter.Stub {
 
     public PrinterProxy(Context context) {
         this.context = context;
-        mProxyPrinter = new HaoPrinter(context);
+        mProxyPrinter = new TSCUsbPrinter(context);
     }
 
     @Override

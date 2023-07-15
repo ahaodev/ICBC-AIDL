@@ -9,8 +9,6 @@ import android.util.Log
 import com.icbc.selfserviceticketing.deviceservice.DeviceListener
 import com.icbc.selfserviceticketing.deviceservice.USBManager.ZKUSBManager
 import com.icbc.selfserviceticketing.deviceservice.USBManager.ZKUSBManagerListener
-import com.zkteco.android.IDReader.IDPhotoHelper
-import com.zkteco.android.IDReader.WLTService
 import com.zkteco.android.biometric.core.device.ParameterHelper
 import com.zkteco.android.biometric.core.device.TransportType
 import com.zkteco.android.biometric.core.utils.LogHelper
@@ -78,6 +76,7 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
 
     private fun start(idCall: (Int, String, Bundle) -> Unit) {
         enableReadID = true
+        this.idCall=idCall
         initDevice()
         Thread.sleep(500)
         if (!enumSensor()) {
@@ -114,7 +113,9 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
                     var cardType = 0
                     try {
                         idCardReader?.findCard(0)
+                        delay(50)
                         idCardReader?.selectCard(0)
+                        delay(50)
                         cardType = idCardReader!!.readCardEx(0, 0);
                     } catch (e: Exception) {
                         if (e is IDCardReaderException) {
@@ -153,6 +154,7 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
                             var bundle = Bundle()
                             bundle.putString("IDNumber", licid)
                             idCall?.let {
+                                Log.d(TAG, "id read :${licid} ")
                                 it(0, "success", bundle)
                             }
 
@@ -179,7 +181,7 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
         idrparams[ParameterHelper.PARAM_KEY_VID] = mVendorId
         idrparams[ParameterHelper.PARAM_KEY_PID] = mProductId
         idCardReader = IDCardReaderFactory.createIDCardReader(context, TransportType.USB, idrparams)
-        idCardReader?.SetBaudRate(115200)
+        //idCardReader?.SetBaudRate(115200)
         idCardReader?.setLibusbFlag(true)
     }
 
@@ -194,6 +196,10 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
         }
         zkusbManager?.unRegisterUSBPermissionReceiver()
         zkusbManager == null
+        idCardReader?.let {
+            IDCardReaderFactory.destroy(it)
+        }
+
     }
 
     override fun OpenDevice(

@@ -75,6 +75,7 @@ class ID180v2(private val context: Context, val cScope: CoroutineScope) : IProxy
     private var readICListener: ((String) -> Unit?)? = null
 
     private fun start(idCall: (Int, String, Bundle) -> Unit) {
+        this.idCall =idCall
         enableReadID = true
         initDevice()
         if (!enumSensor()) {

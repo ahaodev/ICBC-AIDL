@@ -62,6 +62,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
     init {
         onInit()
+        connectUsbPrinter()
     }
 
     fun onInit(): Int {
@@ -113,9 +114,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
     fun printerBitMap(bitmap: Bitmap) {
         Log.d(TAG, "onCreate: 开始打印")
-        val pageCmd = "SIZE 76 mm,60 mm\r\n"
-        Log.d(TAG, "sendCMD: ${pageCmd}")
-        sendCommand(pageCmd)
+        sendCommand("SIZE 76 mm,60 mm\r\n")
         sendCommand("GAP 2 mm,0\r\n")
         sendCommand("CLS\r\n")
         sendBitmap(0, 0, bitmap)
@@ -176,6 +175,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     private fun sendCommand(printerCommand: String): Boolean {
+        Log.d(TAG, "sendCommand: ${printerCommand}")
         if (mUsbConnection == null) {
             return false
         }
@@ -272,10 +272,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
 
         // 输出调试日志
-        Log.d(TAG, "sendBitmap: $command")
-        Log.d(TAG, "sendBitmap: ${stream.contentToString()}")
-        Log.d(TAG, "sendBitmap: ${"\\r\\n"}")
-
+        Log.d(TAG, "sendBitmap: ----")
         // 发送打印指令和字节流数据到打印机
         //TscUSB.sendCommand("$command${byteArrayToHex(stream)}$\r\n")
         sendCommand(command)
@@ -284,6 +281,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     private fun sendCommandLargeByte(command: ByteArray): String {
+        Log.d(TAG, "sendCommandLargeByte: ${command}")
         return if (mUsbConnection == null) {
             "-1"
         } else {
@@ -340,6 +338,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
                 Thread.sleep(300L)
             } catch (var4: InterruptedException) {
             }
+            Log.d(TAG, "sendCommandLargeByte: end")
             "1"
         }
     }
@@ -453,15 +452,19 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         szPort: String?,
         szParam: String?
     ): Int {
-        return connectUsbPrinter()
+        Log.d(TAG, "OpenDevice: --")
+        return 0
     }
 
     override fun CloseDevice(DeviceID: Int): Int {
-//        bitmapPrinter.recycle()
+        bitmapPrinter.recycle()
+        Log.d(TAG, "getStatus: ")
         return 0
     }
 
     override fun getStatus(): Int {
+        Log.d(TAG, "getStatus: ")
+
         return 0
     }
 
@@ -484,11 +487,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         val direction = format.getInt("direction")
         val offsetX = format.getInt("OffsetX")
         val offsetY = format.getInt("OffsetY")
-        Log.d(TAG, "setPageSize: pageW=$pageW")
-        Log.d(TAG, "setPageSize: pageH=$pageH")
-        Log.d(TAG, "setPageSize: direction=$direction")
-        Log.d(TAG, "setPageSize: OffsetX=$offsetX")
-        Log.d(TAG, "setPageSize: OffsetY=$offsetY")
+        Log.d(TAG, "setPageSize: pageW=$pageW pageH=$pageH direction=$direction OffsetX=$offsetX OffsetY=$offsetY")
 
         bitmapPrinter.setPageSize(
             pageW.toPix(),
@@ -501,7 +500,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     override fun startPrintDoc(): Int {
-        TODO("Not yet implemented")
+        return  0
     }
 
     override fun addText(format: Bundle, text: String): Int {
@@ -558,14 +557,15 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     override fun addImage(format: Bundle?, imageData: String?): Int {
-        TODO("Not yet implemented")
+        Log.d(TAG, "addImage: ")
+      return 0
     }
 
     override fun endPrintDoc(): Int {
+        Log.d(TAG, "endPrintDoc: ----start")
         val bitmap = bitmapPrinter.drawEnd()
         printerBitMap(bitmap)
-        bitmap.recycle()
-        bitmapPrinter.recycle()
+        Log.d(TAG, "endPrintDoc: ----end")
         return 0
     }
 }

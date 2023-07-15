@@ -162,15 +162,16 @@ class BitmapPrinterV3 {
     }
 
     companion object {
-        const val TAG = "Printer"
+        const val TAG = "BitmapPrinterV3"
     }
 
     fun drawEnd(): Bitmap {
         //canvas.restore()
         mPaint.style = Paint.Style.STROKE
-        if (debug){
+        if (debug) {
             canvas.drawRect(2f, 2f, bitmap.width - 2f, bitmap.height - 2f, mPaint)
         }
+        Log.d(TAG, "drawEnd: end ${debug} model")
         return bitmap
     }
 
@@ -218,5 +219,13 @@ class BitmapPrinterV3 {
         val canvas = Canvas(printerBitmap)
         canvas.drawColor(Color.WHITE)
         return Pair(printerBitmap, canvas)
+    }
+
+    private fun Int.toPix(): Int {
+        return (this * dpi).toInt()
+//        return if (this > 10)
+//            (this * 11.8).toInt()
+//        else
+//            this * DPI
     }
 }

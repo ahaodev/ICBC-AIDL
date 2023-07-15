@@ -62,7 +62,7 @@ public class IDCardTest {
         };
         Intent intent = new Intent(appContext, DeviceService.class);
         appContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE | Context.BIND_DEBUG_UNBIND);
-        Thread.sleep(100000);
+        Thread.sleep(20000);
         assertEquals("com.icbc.selfserviceticketing.deviceservice", appContext.getPackageName());
     }
 

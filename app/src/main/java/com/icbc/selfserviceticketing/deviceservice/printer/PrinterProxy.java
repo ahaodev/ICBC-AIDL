@@ -1,20 +1,27 @@
 package com.icbc.selfserviceticketing.deviceservice.printer;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.icbc.selfserviceticketing.deviceservice.BuildConfig;
 import com.icbc.selfserviceticketing.deviceservice.IPrinter;
 
 public class PrinterProxy extends IPrinter.Stub {
     IProxyPrinter mProxyPrinter;
     Context context;
-    String TAG ="PrinterProxy";
+    String TAG = "PrinterProxy";
+
     public PrinterProxy(Context context) {
         this.context = context;
-        mProxyPrinter = new TSCUsbPrinter(context);
-        Log.d(TAG, "PrinterProxy: "+mProxyPrinter.getClass().getSimpleName());
+        if (BuildConfig.FLAVOR_printer == "csn_") {
+            mProxyPrinter = new HaoPrinter(context);
+        } else {
+            mProxyPrinter = new TSCUsbPrinter(context);
+        }
+        Log.d(TAG, "PrinterProxy: " + mProxyPrinter.getClass().getSimpleName());
     }
 
     @Override
@@ -44,7 +51,7 @@ public class PrinterProxy extends IPrinter.Stub {
 
     @Override
     public int addText(Bundle format, String text) throws RemoteException {
-        if (null==text||text.isEmpty())return 0;
+        if (null == text || text.isEmpty()) return 0;
         return mProxyPrinter.addText(format, text);
     }
 

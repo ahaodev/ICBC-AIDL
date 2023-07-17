@@ -14,8 +14,8 @@ android {
         //25 7.1
         minSdk 25
         targetSdk 30
-        versionCode 103
-        versionName "1.0.3"
+        versionCode 108
+        versionName "1.0.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ndk {
@@ -33,14 +33,50 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    sourceSets{
-        main{
+    sourceSets {
+        main {
             jniLibs.srcDirs = ['src/main/jniLibs']
         }
     }
 //    packagingOptions {
 //        exclude '/jni/armeabi-v7a/libserial_port.so'
 //    }
+    variantFilter { variant ->
+        def buildTypeName = variant.buildType.name
+        if (buildTypeName == "release") {
+            variant.setIgnore(true)
+        }
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            def time = new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("GMT+08:00"))
+            def buildTypes = variant.buildType.name
+            def versionName = variant.versionName
+            //def productFlavors = variant.productFlavors[0].name
+
+            outputFileName = "icbc-aidl-service-${versionName}.apk"
+            //产品名称-产品类型-构建类型-版本号-打包时间-后缀名
+            print(outputFileName)
+        }
+    }
+    flavorDimensions "idcard", "printer", "scanner"
+    productFlavors {
+        id180_ {
+            dimension "idcard"
+        }
+        idm40_ {
+            dimension "idcard"
+        }
+        superLead_{
+            dimension "scanner"
+        }
+        tsc310e_{
+            dimension "printer"
+        }
+        csn_{
+            dimension "printer"
+        }
+    }
 }
 
 dependencies {

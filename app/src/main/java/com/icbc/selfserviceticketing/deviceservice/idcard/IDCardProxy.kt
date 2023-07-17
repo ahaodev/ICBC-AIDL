@@ -3,15 +3,24 @@ package com.icbc.selfserviceticketing.deviceservice.idcard
 import android.content.Context
 import android.os.Bundle
 import android.os.RemoteException
+import com.icbc.selfserviceticketing.deviceservice.BuildConfig
 import com.icbc.selfserviceticketing.deviceservice.DeviceListener
 import com.icbc.selfserviceticketing.deviceservice.IIDCard
 import kotlinx.coroutines.CoroutineScope
 
 class IDCardProxy(context: Context, scope: CoroutineScope) : IIDCard.Stub() {
-    private var iProxyIDCard: IProxyIDCard
+    private lateinit var iProxyIDCard: IProxyIDCard
 
     init {
-        iProxyIDCard = ID180v2(context, scope)
+        when (BuildConfig.FLAVOR_idcard) {
+            "id180_" -> {
+                iProxyIDCard = ID180v2(context, scope)
+            }
+
+            "idm40_" -> {
+                iProxyIDCard = IDM40(context, scope)
+            }
+        }
     }
 
 

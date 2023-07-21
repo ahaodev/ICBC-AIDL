@@ -3,6 +3,7 @@ package com.icbc.selfserviceticketing.deviceservice.printer
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.os.Build
 import android.text.Layout
@@ -219,7 +220,11 @@ class BitmapPrinterV3 {
         canvas.drawColor(Color.WHITE)
         return Pair(printerBitmap, canvas)
     }
-
+    fun rotateBitmap(bitmap: Bitmap, degrees: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(degrees)
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
     private fun Int.toPix(): Int {
         return (this * dpi).toInt()
 //        return if (this > 10)

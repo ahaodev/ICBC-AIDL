@@ -31,7 +31,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
     }
 
-
+    private var pageW = 0
+    private var pageH = 0
     private var usbEndpointIn: UsbEndpoint? = null
     private var usbEndpointOut: UsbEndpoint? = null
     private var mUsbConnection: UsbDeviceConnection? = null
@@ -114,8 +115,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
     fun printerBitMap(bitmap: Bitmap) {
         Log.d(TAG, "onCreate: 开始打印")
-        sendCommand("SIZE 76 mm,60 mm\r\n")
-        sendCommand("GAP 2 mm,0\r\n")
+        sendCommand("SIZE 70 mm,172.46 mm\r\n")
+        sendCommand("GAP 4.66 mm,0\r\n")
         sendCommand("CLS\r\n")
         sendBitmap(0, 0, bitmap)
         sendCommand("")
@@ -487,7 +488,10 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         val direction = format.getInt("direction")
         val offsetX = format.getInt("OffsetX")
         val offsetY = format.getInt("OffsetY")
-        Log.d(TAG, "setPageSize: pageW=$pageW pageH=$pageH direction=$direction OffsetX=$offsetX OffsetY=$offsetY")
+        Log.d(
+            TAG,
+            "setPageSize: pageW=$pageW pageH=$pageH direction=$direction OffsetX=$offsetX OffsetY=$offsetY"
+        )
 
         bitmapPrinter.setPageSize(
             pageW.toPix(),
@@ -496,11 +500,13 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             offsetX.toPix(),
             offsetY.toPix()
         )
+        this.pageW =pageW
+        this.pageH =pageH
         return 0
     }
 
     override fun startPrintDoc(): Int {
-        return  0
+        return 0
     }
 
     override fun addText(format: Bundle, text: String): Int {
@@ -558,12 +564,13 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
     override fun addImage(format: Bundle?, imageData: String?): Int {
         Log.d(TAG, "addImage: ")
-      return 0
+        return 0
     }
 
     override fun endPrintDoc(): Int {
         Log.d(TAG, "endPrintDoc: ----start")
         val bitmap = bitmapPrinter.drawEnd()
+        //val targetBitmap = bitmapPrinter.rotateBitmap(bitmap, 90f)
         printerBitMap(bitmap)
         Log.d(TAG, "endPrintDoc: ----end")
         return 0

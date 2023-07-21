@@ -164,12 +164,14 @@ class BitmapPrinterV3 {
     companion object {
         const val TAG = "BitmapPrinterV3"
     }
-
+    fun drawPadding(left :Float=2f,top :Float=2f,right :Float=2f,bottom:Float=2f){
+        mPaint.style = Paint.Style.STROKE
+        canvas.drawRect(left, top, bitmap.width - right, bitmap.height - bottom, mPaint)
+    }
     fun drawEnd(): Bitmap {
         //canvas.restore()
-        mPaint.style = Paint.Style.STROKE
-        if (debug) {
-            canvas.drawRect(2f, 2f, bitmap.width - 2f, bitmap.height - 2f, mPaint)
+        if (debug){
+            drawPadding()
         }
         Log.d(TAG, "drawEnd: end ${debug} model")
         return bitmap

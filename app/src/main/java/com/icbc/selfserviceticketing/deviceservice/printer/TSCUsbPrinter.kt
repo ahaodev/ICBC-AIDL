@@ -38,9 +38,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     private var mUsbConnection: UsbDeviceConnection? = null
     private var mUsbendpoint: UsbEndpoint? = null
     private var mUsbIntf: UsbInterface? = null
-    var bitmapPrinter = BitmapPrinterV3().apply {
-        debug = true
-    }
+    var bitmapPrinter = BitmapPrinterV3()
     private var mUsbDevice: UsbDevice? = null
 
     // Catches intent indicating if the user grants permission to use the USB device
@@ -573,6 +571,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         //val targetBitmap = bitmapPrinter.rotateBitmap(bitmap, 90f)
         printerBitMap(bitmap)
         Log.d(TAG, "endPrintDoc: ----end")
+        bitmap.recycle()
+        bitmapPrinter.recycle()
         return 0
     }
 }

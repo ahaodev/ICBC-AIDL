@@ -9,6 +9,8 @@ import android.util.Log
 import com.icbc.selfserviceticketing.deviceservice.DeviceListener
 import com.icbc.selfserviceticketing.deviceservice.USBManager.ZKUSBManager
 import com.icbc.selfserviceticketing.deviceservice.USBManager.ZKUSBManagerListener
+import com.zkteco.android.IDReader.IDPhotoHelper
+import com.zkteco.android.IDReader.WLTService
 import com.zkteco.android.biometric.core.device.ParameterHelper
 import com.zkteco.android.biometric.core.device.TransportType
 import com.zkteco.android.biometric.core.utils.LogHelper
@@ -16,6 +18,7 @@ import com.zkteco.android.biometric.module.idcard.IDCardReader
 import com.zkteco.android.biometric.module.idcard.IDCardReaderFactory
 import com.zkteco.android.biometric.module.idcard.IDCardType
 import com.zkteco.android.biometric.module.idcard.exception.IDCardReaderException
+import com.zkteco.android.biometric.module.idcard.meta.IDCardInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -136,27 +139,8 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
                         Log.d(TAG, "openDevice: cardType ${cardType}")
                         if (cardType == IDCardType.TYPE_CARD_SFZ || cardType == IDCardType.TYPE_CARD_GAT) {
                             val idCardInfo = idCardReader!!.lastIDCardInfo
-                            val name = idCardInfo.name
-                            val sex = idCardInfo.sex
-                            val nation = idCardInfo.nation
-                            val born = idCardInfo.birth
-                            val licid = idCardInfo.id
-                            val depart = idCardInfo.depart
-                            val expireDate = idCardInfo.validityTime
-                            val addr = idCardInfo.address
-                            val passNo = idCardInfo.passNum
-                            val visaTimes = idCardInfo.visaTimes
-                            var bmpPhoto: Bitmap? = null
-                            if (idCardInfo.photolength > 0) {
-//                                val buf = ByteArray(WLTService.imgLength)
-//                                if (1 == WLTService.wlt2Bmp(idCardInfo.photo, buf)) {
-//                                    bmpPhoto = IDPhotoHelper.Bgr2Bitmap(buf)
-//                                }
-                            }
-                            var bundle = Bundle()
-                            bundle.putString("IDNumber", licid)
+                            val bundle = createBundle(idCardInfo)
                             idCall?.let {
-                                Log.d(TAG, "id read :${licid} ")
                                 it(0, "success", bundle)
                             }
 
@@ -168,6 +152,40 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
         } catch (e: IDCardReaderException) {
             Log.d(TAG, "openDevice:打开设备失败 ")
             e.printStackTrace()
+        }
+    }
+
+    private fun createBundle(idCardInfo: IDCardInfo): Bundle {
+        return with(Bundle()) {
+            //姓名
+            putString("IDName", idCardInfo.name)
+            //身份证号
+            putString("IDNumber", idCardInfo.id)
+            //民族
+            putString("IDNation", idCardInfo.nation)
+            //性别
+            putString("IDSex", idCardInfo.sex)
+            //出生日期
+            putString("IDBirthday", idCardInfo.birth)
+            //住址
+            putString("IDAddress", idCardInfo.address)
+            //签发机关
+            putString("IDSignedDepartment", idCardInfo.depart)
+            //有效期限
+            val validityTime = idCardInfo.validityTime
+            val split =
+                validityTime.split("-".toRegex()).dropLastWhile { it.isEmpty() }
+                    .toTypedArray()
+            putString("IDEffectiveDate", split[0])
+            putString("IDExpiryDate", split[1])
+            if (idCardInfo.photolength > 0) {
+                val buf = ByteArray(WLTService.imgLength)
+                if (1 == WLTService.wlt2Bmp(idCardInfo.photo, buf)) {
+                    val bitmap = IDPhotoHelper.Bgr2Bitmap(buf)
+                    putParcelable("IDImage", bitmap)
+                }
+            }
+            this
         }
     }
 

@@ -14,13 +14,13 @@ android {
         //25 7.1
         minSdk 25
         targetSdk 30
-        versionCode 109
-        versionName "1.0.9"
+        versionCode 1010
+        versionName "1.0.10"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        ndk {
-            abiFilters 'armeabi-v7a'
-        }
+//        ndk {
+//            abiFilters 'armeabi-v7a'
+//        }
     }
 
     buildTypes {

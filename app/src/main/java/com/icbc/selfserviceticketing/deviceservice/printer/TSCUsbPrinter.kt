@@ -119,6 +119,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         sendBitmap(0, 0, bitmap)
         sendCommand("")
         sendCommand("PRINT 1\r\n")
+        //切刀
+        sendCommand("CUT\r\n")
     }
 
     private fun openPort(usbManager: UsbManager, device: UsbDevice): Boolean {

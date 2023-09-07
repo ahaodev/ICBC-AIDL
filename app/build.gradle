@@ -14,8 +14,8 @@ android {
         //25 7.1
         minSdk 25
         targetSdk 30
-        versionCode 1012
-        versionName "1.0.12"
+        versionCode 1013
+        versionName "1.0.13"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 //        ndk {
@@ -52,9 +52,8 @@ android {
             def time = new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("GMT+08:00"))
             def buildTypes = variant.buildType.name
             def versionName = variant.versionName
-            //def productFlavors = variant.productFlavors[0].name
-
-            outputFileName = "icbc-aidl-service-${versionName}.apk"
+            def variantName = variant.name.replace("_", "-").replace("-Debug","")
+            outputFileName = "icbc-aidl-service-${variantName}-${versionName}.apk"
             //产品名称-产品类型-构建类型-版本号-打包时间-后缀名
             print(outputFileName)
         }
@@ -67,13 +66,13 @@ android {
         idm40_ {
             dimension "idcard"
         }
-        superLead_{
+        superLead_ {
             dimension "scanner"
         }
-        tsc310e_{
+        tsc310e_ {
             dimension "printer"
         }
-        csn_{
+        csn_ {
             dimension "printer"
         }
     }

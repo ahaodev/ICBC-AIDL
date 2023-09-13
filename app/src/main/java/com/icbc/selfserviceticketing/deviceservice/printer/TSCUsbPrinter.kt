@@ -16,6 +16,7 @@ import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
+import com.blankj.utilcode.util.LogUtils
 
 class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     companion object {
@@ -111,16 +112,22 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         return 0
     }
 
-    fun printerBitMap(bitmap: Bitmap) {
+    private fun printerBitmap(bitmap: Bitmap) {
         Log.d(TAG, "onCreate: 开始打印")
+        LogUtils.file("开始打印")
         sendCommand("SIZE 70 mm,172.46 mm\r\n")
         sendCommand("GAP 4.66 mm,0\r\n")
         sendCommand("CLS\r\n")
         sendBitmap(0, 0, bitmap)
         sendCommand("")
         sendCommand("PRINT 1\r\n")
+        //回退40mm
+//        sendCommand("BACKUP 216\r\n")
         //切刀
         sendCommand("CUT\r\n")
+        //送出40mm
+//        sendCommand("FEED 216\r\n")
+        LogUtils.file("打印结束")
     }
 
     private fun openPort(usbManager: UsbManager, device: UsbDevice): Boolean {
@@ -502,10 +509,12 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         )
         this.pageW =pageW
         this.pageH =pageH
+        LogUtils.file("$pageW,$pageH,$direction,$offsetX,$offsetY")
         return 0
     }
 
     override fun startPrintDoc(): Int {
+        LogUtils.file("startPrintDoc")
         return 0
     }
 
@@ -542,6 +551,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align,
             pageWidth.toPix()
         )
+        LogUtils.file("$fontName,$fontSize,$rotation,$iLeft,$iTop,$align,$pageWidth")
         return 0
     }
 
@@ -559,22 +569,26 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         //宽 1~16
         Log.d(TAG, "addQrCode: iLeft=$iLeft iTop=$iTop expectedHeight=$expectedHeight")
         bitmapPrinter.addQrCode(iLeft.toPix(), iTop.toPix(), expectedHeight.toPix(), qrCode!!)
+        LogUtils.file("$iLeft,$iTop,$expectedHeight")
         return 0
     }
 
     override fun addImage(format: Bundle?, imageData: String?): Int {
         Log.d(TAG, "addImage: ")
+        LogUtils.file("$format,$imageData")
         return 0
     }
 
     override fun endPrintDoc(): Int {
         Log.d(TAG, "endPrintDoc: ----start")
+        LogUtils.file("endPrintDoc ----start")
         val bitmap = bitmapPrinter.drawEnd()
         //val targetBitmap = bitmapPrinter.rotateBitmap(bitmap, 90f)
-        printerBitMap(bitmap)
+        printerBitmap(bitmap)
         Log.d(TAG, "endPrintDoc: ----end")
         bitmap.recycle()
         bitmapPrinter.recycle()
+        LogUtils.file("endPrintDoc")
         return 0
     }
 }

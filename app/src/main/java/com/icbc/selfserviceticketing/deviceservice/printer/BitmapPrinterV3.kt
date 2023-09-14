@@ -5,12 +5,14 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.PorterDuff
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.blankj.utilcode.util.LogUtils
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
@@ -178,6 +180,7 @@ class BitmapPrinterV3 {
     }
 
     fun recycle() = run {
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR); // 使用透明色清空Canvas
         bitmap.recycle()
     }
 
@@ -217,6 +220,7 @@ class BitmapPrinterV3 {
             Log.e("打印机服务", "请确认打印机是否支持大于576像素")
         }
         Log.d(TAG, "basicBitmap: width=$width height=$height")
+        LogUtils.file("width=${width},height=${height}")
         val printerBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
         val canvas = Canvas(printerBitmap)
         canvas.drawColor(Color.WHITE)

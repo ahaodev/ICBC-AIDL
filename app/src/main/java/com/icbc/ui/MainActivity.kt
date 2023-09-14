@@ -1,26 +1,25 @@
 package com.icbc.ui
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
 import android.util.Log
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import com.blankj.utilcode.util.LogUtils
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
-import com.icbc.selfserviceticketing.deviceservice.DeviceService
-import com.icbc.selfserviceticketing.deviceservice.IDeviceService
 import com.icbc.selfserviceticketing.deviceservice.R
 import com.icbc.selfserviceticketing.deviceservice.printer.BitmapPrinter
+import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
+import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.util.EnumMap
@@ -32,9 +31,39 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setInfo()
+        uploadLog()
     }
 
-    fun setInfo() {
+    private fun uploadLog() {
+        findViewById<Button>(R.id.uploadLog).setOnClickListener {
+            Thread {
+                var sbf = StringBuffer()
+                LogUtilsUpload().uploadLogs {
+                    try {
+                        sbf.append("\n")
+                            .append(JSONObject(it).getJSONObject("data").getString("url"))
+                    } catch (e: java.lang.Exception) {
+                        LogUtils.file(e)
+                        sbf.append("上传错误\n $it")
+                    }
+                }
+                runOnUiThread {
+                    val builder: AlertDialog.Builder = AlertDialog.Builder(this)
+                    builder.setTitle("提示")
+                    builder.setMessage(sbf.toString())
+                    builder.setPositiveButton(
+                        "关闭"
+                    ) { dialog, which -> // 点击关闭按钮后，关闭对话框
+                        dialog.dismiss()
+                    }
+                    val dialog: AlertDialog = builder.create()
+                    dialog.show()
+                }
+            }.start()
+        }
+    }
+
+    private fun setInfo() {
         val deviceSerial = Build.SERIAL
         val address = getMacAddress()
         val info = "序列号：${deviceSerial}\nMAC地址:${address}"

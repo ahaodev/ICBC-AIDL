@@ -25,4 +25,16 @@
         app:layout_constraintEnd_toEndOf="@+id/img"
         app:layout_constraintStart_toStartOf="@+id/img"
         app:layout_constraintTop_toBottomOf="@+id/img" />
+
+    <Button
+        android:id="@+id/uploadLog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="60dp"
+        android:text="上传日志"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
+
+    </Button>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -27,7 +27,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         private var device: UsbDevice? = null
         private val MAX_USBFS_BUFFER_SIZE = 10000
         private var DPI = 12
-        private var TIMEOUT = 1000
+        private var TIMEOUT = 5000
         val TAG = "TSCUsbPrinter"
 
     }
@@ -39,7 +39,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     private var mUsbConnection: UsbDeviceConnection? = null
     private var mUsbendpoint: UsbEndpoint? = null
     private var mUsbIntf: UsbInterface? = null
-    var bitmapPrinter = BitmapPrinterV3()
+    private var bitmapPrinter: BitmapPrinterV3? = null
     private var mUsbDevice: UsbDevice? = null
 
     // Catches intent indicating if the user grants permission to use the USB device
@@ -65,7 +65,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         connectUsbPrinter()
     }
 
-    fun onInit(): Int {
+    private fun onInit(): Int {
+        LogUtils.file("Init")
         mUsbManager = context.getSystemService(Activity.USB_SERVICE) as UsbManager
         mPermissionIntent = PendingIntent.getBroadcast(
             context,
@@ -100,8 +101,10 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     fun connectUsbPrinter(): Int {
+        LogUtils.file("connectUsbPrinter")
         if (!mUsbManager!!.hasPermission(device)) {
             Log.e(TAG, "connectUsbPrinter: USB无访问权限")
+            LogUtils.file(TAG, "connectUsbPrinter: USB无访问权限")
             return 1
         }
 
@@ -112,25 +115,31 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         return 0
     }
 
-    private fun printerBitmap(bitmap: Bitmap) {
+    private fun printerBitmap(bitmap: Bitmap): Int {
         Log.d(TAG, "onCreate: 开始打印")
-        LogUtils.file("开始打印")
+        LogUtils.file("开始打印,bitmap size=${bitmap.byteCount / 1024.0f}KB")
         sendCommand("SIZE 70 mm,172.46 mm\r\n")
         sendCommand("GAP 4.66 mm,0\r\n")
         sendCommand("CLS\r\n")
-        sendBitmap(0, 0, bitmap)
-        sendCommand("")
+        try {
+            sendBitmap(0, 0, bitmap)
+        } catch (e: Exception) {
+            return -1
+        }
         sendCommand("PRINT 1\r\n")
         //回退40mm
 //        sendCommand("BACKUP 216\r\n")
         //切刀
-        sendCommand("CUT\r\n")
+//        sendCommand("CUT\r\n")
         //送出40mm
 //        sendCommand("FEED 216\r\n")
+//        sendCommand("\r\n")
         LogUtils.file("打印结束")
+        return 0
     }
 
     private fun openPort(usbManager: UsbManager, device: UsbDevice): Boolean {
+        LogUtils.file("openPort")
         this.mUsbIntf = device!!.getInterface(0)
         mUsbendpoint = mUsbIntf!!.getEndpoint(0)
         mUsbConnection = usbManager.openDevice(device)
@@ -150,6 +159,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         } catch (var6: InterruptedException) {
             var6.printStackTrace()
         }
+        LogUtils.file("portStatus=$portStatus")
         return portStatus
     }
 
@@ -183,7 +193,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     private fun sendCommand(printerCommand: String): Boolean {
-        Log.d(TAG, "sendCommand: ${printerCommand}")
+        Log.d(TAG, "sendCommand: $printerCommand")
+        LogUtils.file(printerCommand)
         if (mUsbConnection == null) {
             return false
         }
@@ -228,7 +239,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
                 var5.printStackTrace()
             }
             try {
-                Thread.sleep(50L)
+                Thread.sleep(100L)
             } catch (var4: InterruptedException) {
             }
             "1"
@@ -281,6 +292,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
         // 输出调试日志
         Log.d(TAG, "sendBitmap: ----")
+        LogUtils.file("sendBitmap: ----")
         // 发送打印指令和字节流数据到打印机
         //TscUSB.sendCommand("$command${byteArrayToHex(stream)}$\r\n")
         sendCommand(command)
@@ -289,13 +301,15 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     private fun sendCommandLargeByte(command: ByteArray): String {
-        Log.d(TAG, "sendCommandLargeByte: ${command}")
+        Log.d(TAG, "byte size= ${command.size}")
+        LogUtils.file("byte size= ${command.size}")
         return if (mUsbConnection == null) {
             "-1"
         } else {
             try {
                 Thread.sleep(100L)
             } catch (var6: InterruptedException) {
+                LogUtils.file(var6)
             }
             val thread = Thread {
                 var counter = 0
@@ -310,6 +324,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
                         if (remain_data == 0) {
                             break
                         }
+                        LogUtils.file("remain_data=$remain_data,")
                         mUsbConnection!!.bulkTransfer(
                             mUsbendpoint,
                             command,
@@ -324,6 +339,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
                             2, TIMEOUT
                         )
                     } else {
+                        LogUtils.file("remain_data > MAX_USBFS_BUFFER_SIZE")
+                        LogUtils.file("bulkTransfer maxSize=${MAX_USBFS_BUFFER_SIZE},timeout=$TIMEOUT,command size=${command.size}")
                         counter = mUsbConnection!!.bulkTransfer(
                             mUsbendpoint,
                             command,
@@ -352,16 +369,16 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     fun createBitmap(): Bitmap {
-        bitmapPrinter.debug = true
-        bitmapPrinter.setPageSize(pageW = 76.toPix(), pageH = 56.toPix())
-        bitmapPrinter.addQrCode(
+        bitmapPrinter?.debug = true
+        bitmapPrinter?.setPageSize(pageW = 76.toPix(), pageH = 56.toPix())
+        bitmapPrinter?.addQrCode(
             iLeft = 1.toPix(),
             iTop = 1.toPix(),
             expectedHeight = 24.toPix(),
             qrCode = "89039049483982<MjAwMDAwMTkyNDIwMjMtMDctMTQyMDIzLTA3LTE0>"
         )
 
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             "票券名称",
             iLeft = 28.toPix(),
             iTop = 2.toPix(),
@@ -370,7 +387,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 6.toPix()
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             "票券编号",
             iLeft = 28.toPix(),
             iTop = 9.toPix(),
@@ -379,7 +396,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 6.toPix()
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             "订单号",
             iLeft = 1 * DPI,
             iTop = 27 * DPI,
@@ -388,7 +405,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 5.toPix()
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             "销售时间",
             iLeft = 28.toPix(),
             iTop = 16.toPix(),
@@ -397,7 +414,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 6.toPix()
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             "从前有座山，山里有座庙，庙里有个老和尚，老和尚给小和尚讲故事",
             iLeft = 1.toPix(),
             iTop = 36.toPix(),
@@ -407,7 +424,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             pageWidth = 72.toPix()
         )
 
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             text = "hao88打印测试票",
             fontSize = 18,
             rotation = 0,
@@ -416,7 +433,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 16.toPix()
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             text = "T2307140030831800001",
             fontSize = 18,
             rotation = 0,
@@ -425,7 +442,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 17.toPix()
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             text = "MO202307140000965754",
             fontSize = 18,
             rotation = 0,
@@ -434,7 +451,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 16.toPix()
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             text = "11:20:58",
             fontSize = 18,
             rotation = 0,
@@ -443,7 +460,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align = 1,
             pageWidth = 12.toPix()
         )
-        return bitmapPrinter.drawEnd()
+        return bitmapPrinter!!.drawEnd()
     }
 
     private fun Int.toPix(): Int {
@@ -465,7 +482,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     override fun CloseDevice(DeviceID: Int): Int {
-        bitmapPrinter.recycle()
+        bitmapPrinter?.recycle()
         Log.d(TAG, "getStatus: ")
         return 0
     }
@@ -499,22 +516,23 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             TAG,
             "setPageSize: pageW=$pageW pageH=$pageH direction=$direction OffsetX=$offsetX OffsetY=$offsetY"
         )
-
-        bitmapPrinter.setPageSize(
+        LogUtils.file(" pageW=$pageW pageH=$pageH direction=$direction OffsetX=$offsetX OffsetY=$offsetY")
+        bitmapPrinter = BitmapPrinterV3()
+        bitmapPrinter?.setPageSize(
             pageW.toPix(),
             pageH.toPix(),
             direction,
             offsetX.toPix(),
             offsetY.toPix()
         )
-        this.pageW =pageW
-        this.pageH =pageH
-        LogUtils.file("$pageW,$pageH,$direction,$offsetX,$offsetY")
+        this.pageW = pageW
+        this.pageH = pageH
+
         return 0
     }
 
     override fun startPrintDoc(): Int {
-        LogUtils.file("startPrintDoc")
+        LogUtils.file("startPrintDoc-----------")
         return 0
     }
 
@@ -542,7 +560,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             TAG,
             "addText: text=$text fontSize=$fontSize rotation=$rotation iLeft=$iLeft iTop=$iTop align=$align pageWidth=$pageWidth"
         )
-        bitmapPrinter.addText(
+        bitmapPrinter?.addText(
             text,
             fontSize,
             rotation,
@@ -551,7 +569,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             align,
             pageWidth.toPix()
         )
-        LogUtils.file("$fontName,$fontSize,$rotation,$iLeft,$iTop,$align,$pageWidth")
+        LogUtils.file("text=$text fontSize=$fontSize rotation=$rotation iLeft=$iLeft iTop=$iTop align=$align pageWidth=$pageWidth")
         return 0
     }
 
@@ -568,8 +586,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         //宽 1~16
         //宽 1~16
         Log.d(TAG, "addQrCode: iLeft=$iLeft iTop=$iTop expectedHeight=$expectedHeight")
-        bitmapPrinter.addQrCode(iLeft.toPix(), iTop.toPix(), expectedHeight.toPix(), qrCode!!)
-        LogUtils.file("$iLeft,$iTop,$expectedHeight")
+        LogUtils.file("iLeft=$iLeft iTop=$iTop expectedHeight=$expectedHeight,qrCode=$qrCode")
+        bitmapPrinter?.addQrCode(iLeft.toPix(), iTop.toPix(), expectedHeight.toPix(), qrCode!!)
         return 0
     }
 
@@ -580,15 +598,19 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     }
 
     override fun endPrintDoc(): Int {
+        var status = -1
         Log.d(TAG, "endPrintDoc: ----start")
         LogUtils.file("endPrintDoc ----start")
-        val bitmap = bitmapPrinter.drawEnd()
+        val bitmap = bitmapPrinter?.drawEnd()
         //val targetBitmap = bitmapPrinter.rotateBitmap(bitmap, 90f)
-        printerBitmap(bitmap)
+        bitmap?.let {
+            status = printerBitmap(it)
+        }
         Log.d(TAG, "endPrintDoc: ----end")
-        bitmap.recycle()
-        bitmapPrinter.recycle()
-        LogUtils.file("endPrintDoc")
-        return 0
+        bitmap?.recycle()
+        bitmapPrinter?.recycle()
+        bitmapPrinter == null
+        LogUtils.file("endPrintDoc----------------------------")
+        return status
     }
 }

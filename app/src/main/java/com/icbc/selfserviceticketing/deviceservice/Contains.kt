@@ -1,5 +1,5 @@
 package com.icbc.selfserviceticketing.deviceservice
 
 object Contains {
-    var Rotation = 0
+    var Rotation = 270
 }

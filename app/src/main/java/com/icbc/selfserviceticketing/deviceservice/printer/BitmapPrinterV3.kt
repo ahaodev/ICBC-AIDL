@@ -123,12 +123,21 @@ class BitmapPrinterV3 {
         textWidth: Int,
         align: Layout.Alignment
     ) {
+        var printerText =text
+        val conditions = listOf("票券名称", "票价", "有效期", "订单号","票型","姓名","票券编号","使用人数","场次","出行时段")
+
+        for (condition in conditions) {
+            if (printerText.contains(condition)) {
+                printerText = "$text:"
+                break
+            }
+        }
         textPaint.textSize = textSize.toFloat() // 设置字体大小
         textPaint.color = Color.BLACK
         textPaint.style = Paint.Style.FILL
 
         val staticLayout = StaticLayout.Builder.obtain(
-            text, 0, text.length, textPaint, textWidth
+            printerText, 0, printerText.length, textPaint, textWidth
         )
             .setAlignment(align)
             .build()
@@ -137,7 +146,7 @@ class BitmapPrinterV3 {
         staticLayout.draw(canvas) // 绘制文本布局
         canvas.restore() // 恢复 Canvas 状态
         //canvas.drawText(text, x, y, mPaint)
-        Log.d(TAG, "bitmap drawText: $text x=$x y=$y textWidth=$textWidth")
+        Log.d(TAG, "bitmap drawText: $printerText x=$x y=$y textWidth=$textWidth")
     }
 
     /**

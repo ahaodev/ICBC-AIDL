@@ -10,6 +10,8 @@ import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.idcard.IDCardProxy
 import com.icbc.selfserviceticketing.deviceservice.printer.PrinterProxy
 import com.icbc.selfserviceticketing.deviceservice.scanner.ScannerSuperLead
+import com.icbc.selfserviceticketing.deviceservice.speech.SpeechProxy
+import com.icbc.selfserviceticketing.deviceservice.speech.TTSUtils
 import com.icbc.selfserviceticketing.deviceservice.utils.CrashListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,15 +22,21 @@ import kotlinx.coroutines.cancel
 class DeviceService : Service() {
     private val serviceJob = SupervisorJob()
     private val scope = CoroutineScope(Dispatchers.Main + serviceJob)
+
     override fun onCreate() {
         super.onCreate()
         CrashUtils.init(CrashListener())
     }
+
     override fun onBind(intent: Intent): IBinder? {
+        val tts = TTSUtils.getInstance()
         return object : IDeviceService.Stub() {
             @Throws(RemoteException::class)
             override fun getISpeech(): ISpeech? {
-                return null
+                tts.init(applicationContext) {
+                    LogUtils.d("init tts")
+                }
+                return SpeechProxy(tts)
             }
 
             @Throws(RemoteException::class)

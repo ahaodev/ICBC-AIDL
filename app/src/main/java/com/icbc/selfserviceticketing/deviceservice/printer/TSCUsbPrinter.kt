@@ -118,8 +118,10 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     private fun printerBitmap(bitmap: Bitmap): Int {
         Log.d(TAG, "onCreate: 开始打印")
         LogUtils.file("开始打印,bitmap size=${bitmap.byteCount / 1024.0f}KB")
-        sendCommand("SIZE 70 mm,172.46 mm\r\n")
-        sendCommand("GAP 4.66 mm,0\r\n")
+        //sendCommand("SIZE 70 mm,172.46 mm\r\n")//天眼的实际设定
+        sendCommand("SIZE 70 mm,185 mm\r\n")
+        //sendCommand("GAP 4.66 mm,0\r\n")//天眼的实际设定
+        sendCommand("GAP 5 mm,0\r\n")
         sendCommand("CLS\r\n")
         try {
             sendBitmap(0, 0, bitmap)
@@ -601,8 +603,11 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         var status = -1
         Log.d(TAG, "endPrintDoc: ----start")
         LogUtils.file("endPrintDoc ----start")
-        val bitmap = bitmapPrinter?.drawEnd()
-        //val targetBitmap = bitmapPrinter.rotateBitmap(bitmap, 90f)
+        var bitmap = bitmapPrinter?.drawEnd()
+        bitmap?.let {
+            bitmap= bitmapPrinter?.rotateBitmap(it, com.icbc.selfserviceticketing.deviceservice.Contains.Rotation.toFloat())
+        }
+
         bitmap?.let {
             status = printerBitmap(it)
         }

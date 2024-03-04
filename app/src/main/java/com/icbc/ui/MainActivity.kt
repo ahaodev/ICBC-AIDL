@@ -1,12 +1,14 @@
 package com.icbc.ui
 
-import android.content.DialogInterface
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -16,6 +18,8 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
+import com.icbc.selfserviceticketing.deviceservice.BuildConfig
+import com.icbc.selfserviceticketing.deviceservice.Contains
 import com.icbc.selfserviceticketing.deviceservice.R
 import com.icbc.selfserviceticketing.deviceservice.printer.BitmapPrinter
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
@@ -44,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                             .append(JSONObject(it).getJSONObject("data").getString("url"))
                     } catch (e: java.lang.Exception) {
                         LogUtils.file(e)
-                        sbf.append("上传错误\n $it")
+                        sbf.append("上传日志\n $it")
                     }
                 }
                 runOnUiThread {
@@ -73,7 +77,24 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageView>(R.id.img).apply {
             setImageBitmap(generateQrImage(info, 300))
         }
+        findViewById<TextView>(R.id.tvVersion).text =
+            "${BuildConfig.FLAVOR}-${BuildConfig.VERSION_NAME}"
+        findViewById<EditText>(R.id.editRotation).addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun afterTextChanged(p0: Editable) {
+                val rotation: String = p0.toString()
+                runCatching {
+                    Contains.Rotation = rotation.toInt()
+                }
+            }
+        })
     }
 
     private fun generateQrImage(text: String, size: Int): Bitmap? {

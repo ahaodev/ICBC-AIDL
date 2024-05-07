@@ -60,9 +60,9 @@ android {
 //    }
     variantFilter { variant ->
         def buildTypeName = variant.buildType.name
-        if (buildTypeName == "release") {
-            variant.setIgnore(true)
-        }
+//        if (buildTypeName == "debug") {
+//            variant.setIgnore(true)
+//        }
     }
     applicationVariants.all { variant ->
         variant.outputs.all {
@@ -77,19 +77,19 @@ android {
     }
     flavorDimensions "idcard", "printer", "scanner"
     productFlavors {
-        id180_ {
+        id180 {
             dimension "idcard"
         }
-        idm40_ {
+        idm40 {
             dimension "idcard"
         }
-        superLead_ {
+        superLead {
             dimension "scanner"
         }
-        tsc310e_ {
+        tsc310e {
             dimension "printer"
         }
-        csn_ {
+        csn {
             dimension "printer"
         }
     }

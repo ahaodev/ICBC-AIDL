@@ -24,7 +24,6 @@ steps:
     commands:
       - echo ${DRONE_SOURCE_BRANCH}
       - chmod +x gradlew
-      - sleep 10000
       - ./gradlew assembleRelease --stacktrace
 #      - ./gradlew assemble --stacktrace
   - name: upload

@@ -22,13 +22,25 @@ android {
 //            abiFilters 'armeabi-v7a'
 //        }
     }
-
+    signingConfigs {
+        single {
+            storeFile file('..//UChi.keystore')
+            storePassword 'uchi2022'
+            keyPassword 'uchi2022'
+            keyAlias 'uchi'
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.single
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        debug {
+            signingConfig signingConfigs.single
+        }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

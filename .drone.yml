@@ -38,8 +38,8 @@ steps:
     commands:
       - VERSION_NAME=$(grep "versionName" version.properties | cut -d'=' -f2)
       - VERSION_CODE=$(grep "versionCode" version.properties | cut -d'=' -f2)
-      - echo "$VERSION_NAME"
-      - echo "$VERSION_CODE"
+      - echo $VERSION_NAME
+      - echo $VERSION_CODE
       - mc config host add mio $ADDRESS $ACCESS_KEY $SECRET_KEY
       # 判断分支名称，根据不同的分支名称选择不同的目录
       - mc ls mio/uchi/AIDL/$VERSION_NAME

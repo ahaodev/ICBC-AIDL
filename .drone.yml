@@ -36,18 +36,16 @@ steps:
       SECRET_KEY:
         from_secret: MINIO_SECRET_KEY
     commands:
-      - VERSION_NAME=$(grep "versionName" version.properties | cut -d'=' -f2)
-      - VERSION_CODE=$(grep "versionCode" version.properties | cut -d'=' -f2)
-      - echo $VERSION_NAME
-      - echo $VERSION_CODE
+      - VERSION_NAME=$(cut -d'=' -f2 version.properties)
+      - echo "$VERSION_NAME"
       - mc config host add mio $ADDRESS $ACCESS_KEY $SECRET_KEY
       # 判断分支名称，根据不同的分支名称选择不同的目录
       - mc ls mio/uchi/AIDL/$VERSION_NAME
-      - mc stat mio/uchi/AIDL/$VERSION_NAME > /dev/null 2>&1 || mc mb mio/uchi/AIDL/$VERSION_NAME
-      - mc cp app/build/outputs/apk/id180_Csn_SuperLead_/debug/*.apk mio/uchi/AIDL/$VERSION_NAME
-      - mc cp app/build/outputs/apk/id180_Tsc310e_SuperLead_/debug/*.apk mio/uchi/AIDL/$VERSION_NAME
-      - mc cp app/build/outputs/apk/idm40_Csn_SuperLead_/debug/*.apk mio/uchi/AIDL/$VERSION_NAME
-      - mc cp app/build/outputs/apk/idm40_Tsc310e_SuperLead_/debug/*.apk mio/uchi/AIDL/$VERSION_NAME
+      - mc stat "mio/uchi/AIDL/${VERSION_NAME}" > /dev/null 2>&1 || mc mb "mio/uchi/AIDL/${VERSION_NAME}"
+      - mc cp app/build/outputs/apk/id180_Csn_SuperLead_/debug/*.apk mio/uchi/AIDL/${VERSION_NAME}"
+      - mc cp app/build/outputs/apk/id180_Tsc310e_SuperLead_/debug/*.apk mio/uchi/AIDL/${VERSION_NAME}"
+      - mc cp app/build/outputs/apk/idm40_Csn_SuperLead_/debug/*.apk mio/uchi/AIDL/${VERSION_NAME}"
+      - mc cp app/build/outputs/apk/idm40_Tsc310e_SuperLead_/debug/*.apk mio/uchi/AIDL/${VERSION_NAME}"
 
 volumes:
   - name: sdk

@@ -60,36 +60,36 @@ android {
 //    }
     variantFilter { variant ->
         def buildTypeName = variant.buildType.name
-//        if (buildTypeName == "debug") {
-//            variant.setIgnore(true)
-//        }
+        if (buildTypeName == "release") {
+            variant.setIgnore(true)
+        }
     }
     applicationVariants.all { variant ->
         variant.outputs.all {
             def time = new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("GMT+08:00"))
             def buildTypes = variant.buildType.name
             def versionName = variant.versionName
-            def variantName = variant.name.replace("_", "-").replace("-Debug","")
-            outputFileName = "aidl-${variantName}-${versionName}-${time}.apk"
+            def variantName = variant.name.replace("-Debug","")
+            outputFileName = "${versionName}-${variantName}-${time}.apk"
             //产品名称-产品类型-构建类型-版本号-打包时间-后缀名
             print(outputFileName)
         }
     }
     flavorDimensions "idcard", "printer", "scanner"
     productFlavors {
-        id180 {
+        id180_ {
             dimension "idcard"
         }
-        idm40 {
+        idm40_ {
             dimension "idcard"
         }
-        superLead {
+        superLead_ {
             dimension "scanner"
         }
-        tsc310e {
+        tsc310e_ {
             dimension "printer"
         }
-        csn {
+        csn_ {
             dimension "printer"
         }
     }

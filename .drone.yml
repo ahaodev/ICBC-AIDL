@@ -24,7 +24,7 @@ steps:
     commands:
       - echo ${DRONE_SOURCE_BRANCH}
       - chmod +x gradlew
-      - ./gradlew assembleRelease --stacktrace
+      - ./gradlew assembleDebug --stacktrace
 #      - ./gradlew assemble --stacktrace
   - name: upload
     image: minio/mc:RELEASE.2024-01-16T16-06-34Z

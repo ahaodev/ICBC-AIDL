@@ -5,7 +5,12 @@ plugins {
     id 'kotlin-parcelize'
 }
 
+
 android {
+    def versionPropsFile = file('../version.properties')
+    def Properties versionProps = new Properties()
+
+    versionProps.load(new FileInputStream(versionPropsFile))
     namespace 'com.icbc.selfserviceticketing.deviceservice'
     compileSdk 32
 
@@ -14,8 +19,8 @@ android {
         //25 7.1
         minSdk 25
         targetSdk 30
-        versionCode 1103
-        versionName "1.1.03"
+        versionCode versionProps['versionCode'].toInteger()
+        versionName versionProps['versionName']
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 //        ndk {

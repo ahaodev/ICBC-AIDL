@@ -69,8 +69,9 @@ android {
             def time = new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("GMT+08:00"))
             def buildTypes = variant.buildType.name
             def versionName = variant.versionName
-            def variantName = variant.name.replace("-Debug","")
-            outputFileName = "${versionName}-${variantName}-${time}.apk"
+            def variantName = variant.name
+            def apkName ="${versionName}-${variantName}-${time}.apk".replace("_Debug","")
+            outputFileName =apkName
             //产品名称-产品类型-构建类型-版本号-打包时间-后缀名
             print(outputFileName)
         }

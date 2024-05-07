@@ -3,13 +3,16 @@ package com.icbc.selfserviceticketing.deviceservice.printer
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.PorterDuff
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.Log
 import androidx.annotation.RequiresApi
+import com.blankj.utilcode.util.LogUtils
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
@@ -120,12 +123,21 @@ class BitmapPrinterV3 {
         textWidth: Int,
         align: Layout.Alignment
     ) {
+        var printerText =text
+        val conditions = listOf("票券名称", "票价", "有效期", "订单号","票型","姓名","票券编号","使用人数","场次","出行时段")
+
+        for (condition in conditions) {
+            if (printerText.contains(condition)) {
+                printerText = "$text:"
+                break
+            }
+        }
         textPaint.textSize = textSize.toFloat() // 设置字体大小
         textPaint.color = Color.BLACK
         textPaint.style = Paint.Style.FILL
 
         val staticLayout = StaticLayout.Builder.obtain(
-            text, 0, text.length, textPaint, textWidth
+            printerText, 0, printerText.length, textPaint, textWidth
         )
             .setAlignment(align)
             .build()
@@ -134,7 +146,7 @@ class BitmapPrinterV3 {
         staticLayout.draw(canvas) // 绘制文本布局
         canvas.restore() // 恢复 Canvas 状态
         //canvas.drawText(text, x, y, mPaint)
-        Log.d(TAG, "bitmap drawText: $text x=$x y=$y textWidth=$textWidth")
+        Log.d(TAG, "bitmap drawText: $printerText x=$x y=$y textWidth=$textWidth")
     }
 
     /**
@@ -163,18 +175,21 @@ class BitmapPrinterV3 {
     companion object {
         const val TAG = "BitmapPrinterV3"
     }
-
+    fun drawPadding(left :Float=2f,top :Float=2f,right :Float=2f,bottom:Float=2f){
+        mPaint.style = Paint.Style.STROKE
+        canvas.drawRect(left, top, bitmap.width - right, bitmap.height - bottom, mPaint)
+    }
     fun drawEnd(): Bitmap {
         //canvas.restore()
-        mPaint.style = Paint.Style.STROKE
-        if (debug) {
-            canvas.drawRect(2f, 2f, bitmap.width - 2f, bitmap.height - 2f, mPaint)
+        if (debug){
+            drawPadding()
         }
         Log.d(TAG, "drawEnd: end ${debug} model")
         return bitmap
     }
 
     fun recycle() = run {
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR); // 使用透明色清空Canvas
         bitmap.recycle()
     }
 
@@ -214,12 +229,17 @@ class BitmapPrinterV3 {
             Log.e("打印机服务", "请确认打印机是否支持大于576像素")
         }
         Log.d(TAG, "basicBitmap: width=$width height=$height")
+        LogUtils.file("width=${width},height=${height}")
         val printerBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
         val canvas = Canvas(printerBitmap)
         canvas.drawColor(Color.WHITE)
         return Pair(printerBitmap, canvas)
     }
-
+    fun rotateBitmap(bitmap: Bitmap, degrees: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(degrees)
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    }
     private fun Int.toPix(): Int {
         return (this * dpi).toInt()
 //        return if (this > 10)

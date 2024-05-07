@@ -118,8 +118,9 @@ public class ScannerSuperLead extends IScanner.Stub {
             }
             Log.d(TAG, "read: data size =" + bytesRead);
             if (bytesRead > 0) {
-                String hex = HexDump.toHexString(buffer);
-                String result = HexDump.hexToAscii(hex);
+//                String hex = HexDump.toHexString(buffer);
+//                String result = HexDump.hexToAscii(hex);
+                String result = new String(buffer, 0, bytesRead);
                 Log.d("read data", result);
                 onSuccessResult(result);
             }

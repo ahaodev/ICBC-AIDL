@@ -605,7 +605,9 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         LogUtils.file("endPrintDoc ----start")
         var bitmap = bitmapPrinter?.drawEnd()
         bitmap?.let {
-            bitmap= bitmapPrinter?.rotateBitmap(it, com.icbc.selfserviceticketing.deviceservice.Contains.Rotation.toFloat())
+            val rotation = com.icbc.selfserviceticketing.deviceservice.Contains.Rotation.toFloat()
+            LogUtils.file("等比旋转角${rotation}")
+            bitmap= bitmapPrinter?.rotateBitmap(it, rotation)
         }
 
         bitmap?.let {

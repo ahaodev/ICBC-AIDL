@@ -17,6 +17,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 
 class DeviceService : Service() {
@@ -29,6 +31,9 @@ class DeviceService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder? {
+        runBlocking {
+           Contains.Rotation = DataStoreManager.getRotation(applicationContext).first()
+        }
         val tts = TTSUtils.getInstance()
         return object : IDeviceService.Stub() {
             @Throws(RemoteException::class)

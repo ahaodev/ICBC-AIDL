@@ -13,6 +13,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.LogUtils
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -20,9 +21,12 @@ import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import com.icbc.selfserviceticketing.deviceservice.BuildConfig
 import com.icbc.selfserviceticketing.deviceservice.Contains
+import com.icbc.selfserviceticketing.deviceservice.DataStoreManager
 import com.icbc.selfserviceticketing.deviceservice.R
 import com.icbc.selfserviceticketing.deviceservice.printer.BitmapPrinter
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -79,7 +83,12 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<TextView>(R.id.tvVersion).text =
             "${BuildConfig.FLAVOR}-${BuildConfig.VERSION_NAME}"
-        findViewById<EditText>(R.id.editRotation).addTextChangedListener(object : TextWatcher {
+        val editRotation = findViewById<EditText>(R.id.editRotation)
+        lifecycleScope.launch {
+            Contains.Rotation=DataStoreManager.getRotation(this@MainActivity).first()
+            editRotation.setText("${Contains.Rotation}")
+        }
+        editRotation.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
             }
@@ -92,6 +101,9 @@ class MainActivity : AppCompatActivity() {
                 val rotation: String = p0.toString()
                 runCatching {
                     Contains.Rotation = rotation.toInt()
+                    lifecycleScope.launch {
+                        DataStoreManager.setRotation(this@MainActivity, Contains.Rotation)
+                    }
                 }
             }
         })

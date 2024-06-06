@@ -25,7 +25,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         private var mPermissionIntent: PendingIntent? = null
         private var hasPermissionToCommunicate = false
         private var device: UsbDevice? = null
-        private val MAX_USBFS_BUFFER_SIZE = 256000
+        private val MAX_USBFS_BUFFER_SIZE = 10240
         private var DPI = 12
         private var TIMEOUT = 5000
         val TAG = "TSCUsbPrinter"
@@ -78,13 +78,14 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         context.registerReceiver(mUsbReceiver, filter)
         val accessoryList = mUsbManager!!.accessoryList
         val deviceList = mUsbManager!!.deviceList
-        Log.d("Detect ", deviceList.size.toString() + " USB device(s) found")
+        LogUtils.d("Detect ", deviceList.size.toString() + " USB device(s) found")
         val deviceIterator: Iterator<UsbDevice> = deviceList.values.iterator()
         while (deviceIterator.hasNext()) {
             device = deviceIterator.next()
+            LogUtils.d(device.toString())
             if (device!!.vendorId == 4611) {
                 //Toast.makeText(MainActivity.this, device.toString(), 0).show();
-                Log.d(TAG, "onCreate: ")
+                LogUtils.d(device.toString())
                 break
             }
         }
@@ -157,7 +158,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         }
 
         try {
-            Thread.sleep(100L)
+            //Thread.sleep(100L)
         } catch (var6: InterruptedException) {
             var6.printStackTrace()
         }
@@ -202,7 +203,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         }
 
         runCatching {
-            Thread.sleep(100L)
+//            Thread.sleep(100L)
             val command = printerCommand.toByteArray()
             mUsbConnection!!.bulkTransfer(mUsbendpoint, command, command.size, TIMEOUT)
         }.onFailure {
@@ -210,7 +211,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         }
 
         try {
-            Thread.sleep(200L)
+//            Thread.sleep(200L)
         } catch (var4: InterruptedException) {
         }
 
@@ -309,51 +310,28 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             "-1"
         } else {
             try {
-                Thread.sleep(100L)
+//                Thread.sleep(100L)
             } catch (var6: InterruptedException) {
                 LogUtils.file(var6)
             }
             val thread = Thread {
-                var counter = 0
-                var total = 0
-                val length = command.size
-                val remain_datax: Int = 0
-                val crlf_byte = "\r\n".toByteArray()
-                var i = 0
-                while (i < length) {
-                    val remain_data = length - total
-                    if (remain_data < MAX_USBFS_BUFFER_SIZE && i != 0) {
-                        if (remain_data == 0) {
-                            break
-                        }
-                        LogUtils.file("remain_data=$remain_data,")
-                        mUsbConnection!!.bulkTransfer(
-                            mUsbendpoint,
-                            command,
-                            i,
-                            remain_data,
-                            TIMEOUT
-                        )
-                        mUsbConnection!!.bulkTransfer(
-                            mUsbendpoint,
-                            crlf_byte,
-                            0,
-                            2, TIMEOUT
-                        )
-                    } else {
-                        LogUtils.file("remain_data > MAX_USBFS_BUFFER_SIZE")
-                        LogUtils.file("bulkTransfer maxSize=${MAX_USBFS_BUFFER_SIZE},timeout=$TIMEOUT,command size=${command.size}")
-                        counter = mUsbConnection!!.bulkTransfer(
-                            mUsbendpoint,
-                            command,
-                            i,
-//                            MAX_USBFS_BUFFER_SIZE,
-                            command.size,
-                            TIMEOUT
-                        )
-                        total += counter
+                var offset = 0
+                val totalSize = command.size
+                while (offset<totalSize) {
+                    val remainingSize = totalSize - offset
+                    val bufferSize = minOf(remainingSize, MAX_USBFS_BUFFER_SIZE)
+                    LogUtils.d("- remainingSize=${remainingSize} bufferSize =$bufferSize offset =$offset total=$totalSize")
+                    val buffer = command.copyOfRange(offset, offset + bufferSize)
+                    LogUtils.d("-- bufferSize=${buffer.size}  bulkTransfer offset=$offset, total=$totalSize")
+
+                    LogUtils.d("--- bulkTransfer  buffer=${buffer}, bufferSize=${buffer.size}")
+                    val transferred = mUsbConnection!!.bulkTransfer(mUsbendpoint, buffer,0, buffer.size, TIMEOUT)
+                    offset += MAX_USBFS_BUFFER_SIZE
+                    if (offset >= totalSize) {
+                        val crlfByte = "\r\n".toByteArray()
+                        mUsbConnection!!.bulkTransfer(mUsbendpoint, crlfByte, 0, crlfByte.size, TIMEOUT)
+                        break
                     }
-                    i += counter
                 }
             }
             thread.start()
@@ -362,10 +340,10 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
             } catch (var5: InterruptedException) {
                 var5.printStackTrace()
             }
-            try {
-                Thread.sleep(300L)
-            } catch (var4: InterruptedException) {
-            }
+//            try {
+//                Thread.sleep(500L)
+//            } catch (var4: InterruptedException) {
+//            }
             Log.d(TAG, "sendCommandLargeByte: end")
             "1"
         }

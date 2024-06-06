@@ -347,7 +347,8 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
                             mUsbendpoint,
                             command,
                             i,
-                            MAX_USBFS_BUFFER_SIZE,
+//                            MAX_USBFS_BUFFER_SIZE,
+                            command.size,
                             TIMEOUT
                         )
                         total += counter

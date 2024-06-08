@@ -25,7 +25,7 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         private var mPermissionIntent: PendingIntent? = null
         private var hasPermissionToCommunicate = false
         private var device: UsbDevice? = null
-        private val MAX_USBFS_BUFFER_SIZE = 10240
+        private val MAX_USBFS_BUFFER_SIZE = 1024*16
         private var DPI = 12
         private var TIMEOUT = 5000
         val TAG = "TSCUsbPrinter"

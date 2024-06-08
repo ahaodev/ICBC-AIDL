@@ -9,7 +9,9 @@ import android.os.Build
 import android.os.Parcelable
 import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.LogUtils
-import com.blankj.utilcode.util.ToastUtils
+import com.icbc.selfserviceticketing.deviceservice.idcard.ID180v2
+import com.icbc.selfserviceticketing.deviceservice.idcard.IDM40
+import com.icbc.selfserviceticketing.deviceservice.scanner.ScannerSuperLead
 
 /**
  * USB 插拔监听
@@ -27,14 +29,20 @@ class UsbBroadcastReceiver : BroadcastReceiver() {
         when (action) {
             UsbManager.ACTION_USB_DEVICE_ATTACHED -> {
                 LogUtils.d("插入未知的USB设备", device.toString())
-                LogUtils.file("插入未知的USB设备", device.toString())
-                restart(context)
+                LogUtils.file("插入未知的USB设备")
+                LogUtils.file(device.toString())
+                if (isSelfDevice(device)){
+                    restart(context)
+                }
             }
 
             UsbManager.ACTION_USB_DEVICE_DETACHED -> {
                 LogUtils.d("拔出未知的USB设备", device.toString())
-                LogUtils.file("拔出未知的USB设备", device.toString())
-                restart(context)
+                LogUtils.file("拔出未知的USB设备")
+                LogUtils.file(device.toString())
+                if (isSelfDevice(device)){
+                    restart(context)
+                }
             }
         }
     }
@@ -51,4 +59,23 @@ class UsbBroadcastReceiver : BroadcastReceiver() {
         android.os.Process.killProcess(android.os.Process.myPid())
     }
 
+    private fun isSelfDevice(device: UsbDevice): Boolean {
+        if (device.vendorId == ID180v2.VID && device.productId == ID180v2.PID) {
+            LogUtils.file("ZKT USB设备", device.toString())
+            return true
+        }
+        if (device.vendorId == IDM40.mVendorId && device.productId == IDM40.mProductId) {
+            LogUtils.file("IDM40 USB设备", device.toString())
+            return true
+        }
+        if (device.vendorId == ScannerSuperLead.DEFAULT_VENDOR_ID) {
+            LogUtils.file("ScannerSuperLead USB设备", device.toString())
+            return true
+        }
+        //mVendorId=4611,mProductId=311 TSC310E打印机
+        if (device.vendorId==4611&&device.productId==311){
+            return true
+        }
+        return false
+    }
 }

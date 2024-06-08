@@ -10,19 +10,21 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.blankj.utilcode.util.LogUtils;
 import com.hoho.android.usbserial.driver.UsbSerialDriver;
 import com.hoho.android.usbserial.driver.UsbSerialPort;
 import com.hoho.android.usbserial.driver.UsbSerialProber;
 import com.icbc.selfserviceticketing.deviceservice.HexDump;
 import com.icbc.selfserviceticketing.deviceservice.IScanner;
 import com.icbc.selfserviceticketing.deviceservice.ScannerListener;
+import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload;
 
 import java.io.IOException;
 import java.util.List;
 
 
 public class ScannerSuperLead extends IScanner.Stub {
-    private static final int DEFAULT_VENDOR_ID = 11734;
+    public static final int DEFAULT_VENDOR_ID = 11734;
     private static final String TAG = "ScannerSuperLead";
     private boolean enable = false;
     private ScannerListener mScannerListener;
@@ -106,25 +108,30 @@ public class ScannerSuperLead extends IScanner.Stub {
 
 
     private void read() {
-        Log.d(TAG, "Thread:  run");
-        while (enable) {
-            byte[] buffer = new byte[1024];
-            int bytesRead = 0;
-            try {
-                bytesRead = port.read(buffer, 200);
-            } catch (IOException e) {
-                e.printStackTrace();
-                onErrorCallback(-1, e.getMessage());
-            }
-            Log.d(TAG, "read: data size =" + bytesRead);
-            if (bytesRead > 0) {
+        try{
+            Log.d(TAG, "Thread:  run");
+            while (enable) {
+                byte[] buffer = new byte[1024];
+                int bytesRead = 0;
+                try {
+                    bytesRead = port.read(buffer, 200);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    onErrorCallback(-1, e.getMessage());
+                }
+                Log.d(TAG, "read: data size =" + bytesRead);
+                if (bytesRead > 0) {
 //                String hex = HexDump.toHexString(buffer);
 //                String result = HexDump.hexToAscii(hex);
-                String result = new String(buffer, 0, bytesRead);
-                Log.d("read data", result);
-                onSuccessResult(result);
+                    String result = new String(buffer, 0, bytesRead);
+                    Log.d("read data", result);
+                    onSuccessResult(result);
+                }
+                SystemClock.sleep(600);
             }
-            SystemClock.sleep(600);
+        }catch (Exception e){
+            e.printStackTrace();
+            LogUtils.d(e);
         }
     }
 }

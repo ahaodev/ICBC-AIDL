@@ -10,11 +10,14 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.LogUtils
+import com.blankj.utilcode.util.ToastUtils
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
@@ -22,7 +25,10 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.icbc.selfserviceticketing.deviceservice.BuildConfig
 import com.icbc.selfserviceticketing.deviceservice.Contains
 import com.icbc.selfserviceticketing.deviceservice.DataStoreManager
+import com.icbc.selfserviceticketing.deviceservice.DataStoreManager.ID_180
+import com.icbc.selfserviceticketing.deviceservice.DataStoreManager.ID_M40
 import com.icbc.selfserviceticketing.deviceservice.R
+import com.icbc.selfserviceticketing.deviceservice.idcard.IDM40
 import com.icbc.selfserviceticketing.deviceservice.printer.BitmapPrinter
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
 import kotlinx.coroutines.flow.first
@@ -40,6 +46,37 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         setInfo()
         uploadLog()
+        idSwitch()
+    }
+
+    private fun idSwitch() {
+        val radioGroup = findViewById<RadioGroup>(R.id.rg)
+        lifecycleScope.launch {
+            val type =DataStoreManager.getIDCard(this@MainActivity).first()
+            when(type){
+                ID_180->{
+                    radioGroup.check(R.id.rdID180)
+                }
+                ID_M40->{
+                    radioGroup.check(R.id.rdIDM40)
+                }
+            }
+        }
+        radioGroup.setOnCheckedChangeListener { group, checkedId ->
+            val radioButton = findViewById<RadioButton>(checkedId)
+            val text = radioButton.text
+            if (text.equals("id180")) {
+                lifecycleScope.launch {
+                    DataStoreManager.setIdCard(applicationContext, ID_180)
+                }
+            }
+            if (text.equals("idm40")) {
+                lifecycleScope.launch {
+                    DataStoreManager.setIdCard(applicationContext, ID_M40)
+                }
+            }
+            ToastUtils.showLong(text)
+        }
     }
 
     private fun uploadLog() {
@@ -85,7 +122,7 @@ class MainActivity : AppCompatActivity() {
             "${BuildConfig.FLAVOR}-${BuildConfig.VERSION_NAME}"
         val editRotation = findViewById<EditText>(R.id.editRotation)
         lifecycleScope.launch {
-            Contains.Rotation=DataStoreManager.getRotation(this@MainActivity).first()
+            Contains.Rotation = DataStoreManager.getRotation(this@MainActivity).first()
             editRotation.setText("${Contains.Rotation}")
         }
         editRotation.addTextChangedListener(object : TextWatcher {

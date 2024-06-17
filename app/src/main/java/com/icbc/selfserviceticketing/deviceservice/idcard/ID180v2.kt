@@ -41,8 +41,10 @@ class ID180v2(private val context: Context, val cScope: CoroutineScope) : IProxy
     private var idCall: ((Int, String, Bundle) -> Unit)? = null
 
     companion object {
-        const val VID = 6790 //IDR VID
-        const val PID = 29987 //IDR PID
+//        const val VID = 6790 //IDR VID
+//        const val PID = 29987 //IDR PID
+        const val VID = 1024 //IDR VID
+        const val PID = 50010 //IDR PID
         const val TAG = "ID180v2"
     }
 

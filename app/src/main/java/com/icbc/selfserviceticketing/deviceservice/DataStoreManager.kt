@@ -20,13 +20,13 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
  */
 
 internal object DataStoreManager {
-
-
     /**
      * 旋转角
      */
     private val ROTATION = intPreferencesKey("rotation")
-
+    private val ID_CARD = intPreferencesKey("IDCard")
+    const val ID_M40 = 0
+    const val ID_180 = 1
 
     suspend fun setRotation(context: Context, tel: Int) {
         context.dataStore.edit {
@@ -36,5 +36,15 @@ internal object DataStoreManager {
 
     suspend fun getRotation(context: Context): Flow<Int> {
         return context.dataStore.data.mapNotNull { it[ROTATION] ?: 0 }
+    }
+
+    suspend fun setIdCard(context: Context, id: Int) {
+        context.dataStore.edit {
+            it[ID_CARD] = id
+        }
+    }
+
+    suspend fun getIDCard(context: Context): Flow<Int> {
+        return context.dataStore.data.mapNotNull { it[ID_CARD] ?: 0 }
     }
 }

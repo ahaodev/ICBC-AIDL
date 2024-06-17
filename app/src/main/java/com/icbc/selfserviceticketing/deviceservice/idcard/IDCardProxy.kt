@@ -4,21 +4,29 @@ import android.content.Context
 import android.os.Bundle
 import android.os.RemoteException
 import com.icbc.selfserviceticketing.deviceservice.BuildConfig
+import com.icbc.selfserviceticketing.deviceservice.DataStoreManager
+import com.icbc.selfserviceticketing.deviceservice.DataStoreManager.ID_180
+import com.icbc.selfserviceticketing.deviceservice.DataStoreManager.ID_M40
 import com.icbc.selfserviceticketing.deviceservice.DeviceListener
 import com.icbc.selfserviceticketing.deviceservice.IIDCard
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class IDCardProxy(context: Context, scope: CoroutineScope) : IIDCard.Stub() {
     private lateinit var iProxyIDCard: IProxyIDCard
 
     init {
-        when (BuildConfig.FLAVOR_idcard) {
-            "id180_" -> {
-                iProxyIDCard = ID180v2(context, scope)
-            }
-
-            "idm40_" -> {
-                iProxyIDCard = IDM40(context, scope)
+        scope.launch {
+           val type = DataStoreManager.getIDCard(context).first()
+            when(type){
+                ID_180 ->{
+                    iProxyIDCard = ID180v2(context, scope)
+                }
+                ID_M40->{
+                    iProxyIDCard = IDM40(context, scope)
+                }
             }
         }
     }

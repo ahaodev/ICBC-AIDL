@@ -19,7 +19,7 @@ class IDCardProxy(context: Context, scope: CoroutineScope) : IIDCard.Stub() {
 
     init {
         scope.launch {
-           val type = DataStoreManager.getIDCard(context).first()
+           val type = DataStoreManager.getIDCard(context,0).first()
             when(type){
                 ID_180 ->{
                     iProxyIDCard = ID180v2(context, scope)

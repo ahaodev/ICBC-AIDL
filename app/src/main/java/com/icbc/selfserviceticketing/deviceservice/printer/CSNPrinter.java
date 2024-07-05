@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
  * 8 dots/mm(203dpi)
  * 72mm
  */
-public class HaoPrinter implements CSNIOCallBack, IProxyPrinter {
+public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
     public static int nPrintWidth = 800;//384
     public static boolean bCutter = false;
     public static boolean bDrawer = false;
@@ -48,7 +48,7 @@ public class HaoPrinter implements CSNIOCallBack, IProxyPrinter {
     private Builder builder = new Builder();
     BitmapPrinter bitmapPrinter;
 
-    public HaoPrinter(Context applicationContext) {
+    public CSNPrinter(Context applicationContext) {
         this.context = applicationContext;
         openDevice();
     }

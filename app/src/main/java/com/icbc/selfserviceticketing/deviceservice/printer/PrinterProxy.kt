@@ -14,7 +14,9 @@ class PrinterProxy(var context: Context) : IPrinter.Stub() {
 
     init {
         mProxyPrinter = if (BuildConfig.FLAVOR_printer === "csn_") {
-            HaoPrinter(context)
+            CSNPrinter(
+                context
+            )
         } else {
             TSCUsbPrinter(context)
         }

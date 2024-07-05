@@ -17,6 +17,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
 import com.blankj.utilcode.util.LogUtils
+import com.icbc.selfserviceticketing.deviceservice.Contains
 
 class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
     companion object {
@@ -29,7 +30,6 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         private var DPI = 12
         private var TIMEOUT = 5000
         val TAG = "TSCUsbPrinter"
-
     }
 
     private var pageW = 0
@@ -120,9 +120,13 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         Log.d(TAG, "onCreate: 开始打印")
         LogUtils.file("开始打印,bitmap size=${bitmap.byteCount / 1024.0f}KB")
         //sendCommand("SIZE 70 mm,172.46 mm\r\n")//天眼的实际设定
-        sendCommand("SIZE 70 mm,185 mm\r\n")
+        sendCommand("SIZE ${Contains.weight} mm,${Contains.height} mm\r\n")
         //sendCommand("GAP 4.66 mm,0\r\n")//天眼的实际设定
-        sendCommand("GAP 5 mm,0\r\n")
+        if (Contains.isCAP){
+            sendCommand("GAP ${Contains.margin} mm,0\r\n")
+        }else{
+            sendCommand("BLINE ${Contains.margin} mm,0\r\n")
+        }
         sendCommand("CLS\r\n")
         try {
             sendBitmap(0, 0, bitmap)

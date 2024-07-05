@@ -99,4 +99,42 @@
             android:layout_height="wrap_content"
             android:text="idm40"></RadioButton>
     </RadioGroup>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="100dp"
+        android:minHeight="100dp"
+        android:orientation="vertical"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <CheckBox
+            android:id="@+id/isCap"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="铜版纸"></CheckBox>
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/editWidth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="宽"
+            android:minWidth="60dp"></androidx.appcompat.widget.AppCompatEditText>
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/editHeight"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="高"
+            android:minWidth="60dp"></androidx.appcompat.widget.AppCompatEditText>
+
+        <androidx.appcompat.widget.AppCompatEditText
+            android:id="@+id/editMargin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="间距"
+            android:minWidth="60dp"></androidx.appcompat.widget.AppCompatEditText>
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -2,7 +2,6 @@ package com.icbc.selfserviceticketing.deviceservice.printer;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Base64;
 
@@ -32,7 +31,7 @@ public class IProxyPrinterTest {
     @Test
     public void printHaoImg() throws InterruptedException {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        IProxyPrinter printer = new HaoPrinter(appContext);
+        IProxyPrinter printer = new CSNPrinter(appContext);
         Thread.sleep(1000);
         PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
         uchiTest.printer();

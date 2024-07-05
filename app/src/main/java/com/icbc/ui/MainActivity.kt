@@ -8,6 +8,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
 import android.widget.Button
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RadioButton
@@ -52,7 +53,7 @@ class MainActivity : AppCompatActivity() {
     private fun idSwitch() {
         val radioGroup = findViewById<RadioGroup>(R.id.rg)
         lifecycleScope.launch {
-            val type =DataStoreManager.getIDCard(this@MainActivity).first()
+            val type =DataStoreManager.getIDCard(this@MainActivity,0).first()
             when(type){
                 ID_180->{
                     radioGroup.check(R.id.rdID180)
@@ -78,7 +79,9 @@ class MainActivity : AppCompatActivity() {
             ToastUtils.showLong(text)
         }
     }
+    private fun isCap(){
 
+    }
     private fun uploadLog() {
         findViewById<Button>(R.id.uploadLog).setOnClickListener {
             Thread {
@@ -120,10 +123,22 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<TextView>(R.id.tvVersion).text =
             "${BuildConfig.FLAVOR}-${BuildConfig.VERSION_NAME}"
+        val checkBoxIsCap = findViewById<CheckBox>(R.id.isCap)
         val editRotation = findViewById<EditText>(R.id.editRotation)
+        val editWidth  = findViewById<EditText>(R.id.editWidth)
+        val editHeight = findViewById<EditText>(R.id.editHeight)
+        val editMargin = findViewById<EditText>(R.id.editMargin)
+
         lifecycleScope.launch {
-            Contains.Rotation = DataStoreManager.getRotation(this@MainActivity).first()
+            Contains.load(this@MainActivity)
+            checkBoxIsCap.isChecked = Contains.isCAP
             editRotation.setText("${Contains.Rotation}")
+            editWidth.setText("${Contains.weight}")
+            editHeight.setText("${Contains.height}")
+            editMargin.setText("${Contains.margin}")
+        }
+        checkBoxIsCap.setOnCheckedChangeListener { ck, b ->
+            checkBoxIsCap.isChecked=b
         }
         editRotation.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
@@ -140,6 +155,63 @@ class MainActivity : AppCompatActivity() {
                     Contains.Rotation = rotation.toInt()
                     lifecycleScope.launch {
                         DataStoreManager.setRotation(this@MainActivity, Contains.Rotation)
+                    }
+                }
+            }
+        })
+        editWidth.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun afterTextChanged(p0: Editable) {
+                val weight: String = p0.toString()
+                runCatching {
+                    Contains.weight = weight.toInt()
+                    lifecycleScope.launch {
+                        DataStoreManager.setWeight(this@MainActivity, Contains.weight)
+                    }
+                }
+            }
+        })
+        editHeight.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun afterTextChanged(p0: Editable) {
+                val height: String = p0.toString()
+                runCatching {
+                    Contains.height = height.toInt()
+                    lifecycleScope.launch {
+                        DataStoreManager.setHeight(this@MainActivity, Contains.height)
+                    }
+                }
+            }
+        })
+        editMargin.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun onTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
+
+            }
+
+            override fun afterTextChanged(p0: Editable) {
+                val margin: String = p0.toString()
+                runCatching {
+                    Contains.margin = margin.toInt()
+                    lifecycleScope.launch {
+                        DataStoreManager.setHeight(this@MainActivity, Contains.margin)
                     }
                 }
             }

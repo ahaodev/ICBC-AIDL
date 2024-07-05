@@ -3,6 +3,7 @@ package com.icbc.selfserviceticketing.deviceservice
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -25,6 +26,10 @@ internal object DataStoreManager {
      */
     private val ROTATION = intPreferencesKey("rotation")
     private val ID_CARD = intPreferencesKey("IDCard")
+    private val ISCAP = booleanPreferencesKey("ISCAP")
+    private val MARGIN = intPreferencesKey("MARGIN")
+    private val WEIGHT = intPreferencesKey("WEIGHT")
+    private val HEIGHT = intPreferencesKey("HEIGHT")
     const val ID_M40 = 0
     const val ID_180 = 1
 
@@ -38,13 +43,57 @@ internal object DataStoreManager {
         return context.dataStore.data.mapNotNull { it[ROTATION] ?: 0 }
     }
 
+    suspend fun setIsCap(context: Context, tel: Boolean) {
+        context.dataStore.edit {
+            it[ISCAP] = tel
+        }
+    }
+
+    suspend fun getIsCap(context: Context,def :Boolean): Flow<Boolean> {
+        return context.dataStore.data.mapNotNull { it[ISCAP] ?: def }
+    }
+
+    suspend fun setMargin(context: Context, tel: Int) {
+        context.dataStore.edit {
+            it[MARGIN] = tel
+        }
+    }
+
+    suspend fun getMargin(context: Context,def:Int): Flow<Int> {
+        return context.dataStore.data.mapNotNull { it[MARGIN] ?: def }
+    }
+
+    suspend fun setWeight(context: Context, tel: Int) {
+        context.dataStore.edit {
+            it[WEIGHT] = tel
+        }
+    }
+
+    suspend fun getWeight(context: Context,def:Int): Flow<Int> {
+        return context.dataStore.data.mapNotNull { it[WEIGHT] ?: def }
+    }
+
+
+    suspend fun setHeight(context: Context, tel: Int) {
+        context.dataStore.edit {
+            it[HEIGHT] = tel
+        }
+    }
+
+    suspend fun getHeight(context: Context,def:Int): Flow<Int> {
+        return context.dataStore.data.mapNotNull { it[HEIGHT] ?: def }
+    }
+
+
+
     suspend fun setIdCard(context: Context, id: Int) {
         context.dataStore.edit {
             it[ID_CARD] = id
         }
     }
 
-    suspend fun getIDCard(context: Context): Flow<Int> {
-        return context.dataStore.data.mapNotNull { it[ID_CARD] ?: 0 }
+
+    suspend fun getIDCard(context: Context,def: Int): Flow<Int> {
+        return context.dataStore.data.mapNotNull { it[ID_CARD] ?: def }
     }
 }

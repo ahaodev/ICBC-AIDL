@@ -79,9 +79,7 @@ class MainActivity : AppCompatActivity() {
             ToastUtils.showLong(text)
         }
     }
-    private fun isCap(){
 
-    }
     private fun uploadLog() {
         findViewById<Button>(R.id.uploadLog).setOnClickListener {
             Thread {

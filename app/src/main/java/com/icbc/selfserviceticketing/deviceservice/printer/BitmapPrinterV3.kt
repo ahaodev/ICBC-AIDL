@@ -101,7 +101,7 @@ class BitmapPrinterV3 {
 //            x += (bitmap.width - pageWidth) / 2
 //        }
         var y = iTop
-        textPaint.textSize = fontSize.toFloat()
+        textPaint.textSize = fontSize.toFloat()*2
         val measureTextWidth = textPaint.measureText(text)//测量宽
         Log.d(TAG, "measureTextWidth: $measureTextWidth")
         var layoutWidth: Int =

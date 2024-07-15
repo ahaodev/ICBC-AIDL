@@ -6,19 +6,22 @@ import android.os.RemoteException
 import android.util.Log
 import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.BuildConfig
+import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.IPrinter
+import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN
 
-class PrinterProxy(var context: Context) : IPrinter.Stub() {
+class PrinterProxy(var context: Context,val config: Config) : IPrinter.Stub() {
     private var mProxyPrinter: IProxyPrinter? = null
     var TAG = "PrinterProxy"
 
     init {
-        mProxyPrinter = if (BuildConfig.FLAVOR_printer === "csn_") {
+        mProxyPrinter = if (config.printerType== PRINTER_CSN) {
+            Log.d(TAG,"GSNPrinter")
             CSNPrinter(
                 context
             )
         } else {
-            TSCUsbPrinter(context)
+            TSCUsbPrinter(context,config)
         }
         Log.d(TAG, "PrinterProxy: " + mProxyPrinter!!.javaClass.simpleName)
         LogUtils.file(mProxyPrinter!!.javaClass.simpleName)

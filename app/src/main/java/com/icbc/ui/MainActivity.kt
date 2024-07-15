@@ -24,12 +24,13 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import com.icbc.selfserviceticketing.deviceservice.BuildConfig
-import com.icbc.selfserviceticketing.deviceservice.Contains
-import com.icbc.selfserviceticketing.deviceservice.DataStoreManager
-import com.icbc.selfserviceticketing.deviceservice.DataStoreManager.ID_180
-import com.icbc.selfserviceticketing.deviceservice.DataStoreManager.ID_M40
+import com.icbc.selfserviceticketing.deviceservice.Config
+import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
+import com.icbc.selfserviceticketing.deviceservice.ID_180
+import com.icbc.selfserviceticketing.deviceservice.ID_M40
+import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN
+import com.icbc.selfserviceticketing.deviceservice.PRINTER_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
-import com.icbc.selfserviceticketing.deviceservice.idcard.IDM40
 import com.icbc.selfserviceticketing.deviceservice.printer.BitmapPrinter
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
 import kotlinx.coroutines.flow.first
@@ -41,24 +42,57 @@ import java.util.EnumMap
 
 
 class MainActivity : AppCompatActivity() {
-
+    private var config = Config()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setInfo()
-        uploadLog()
-        idSwitch()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch {
+            runCatching {
+                config=ConfigProvider.readConfig(applicationContext).first()
+            }
+            setInfo()
+            uploadLog()
+            idSwitch()
+            printerSwitch()
+        }
+
+    }
+    private fun printerSwitch() {
+        val radioGroup = findViewById<RadioGroup>(R.id.rg2)
+        when (config.printerType) {
+            PRINTER_CSN -> {
+                radioGroup.check(R.id.rbCSN)
+            }
+            PRINTER_TSC310E -> {
+                radioGroup.check(R.id.rbTSC310E)
+            }
+        }
+        radioGroup.setOnCheckedChangeListener { group, checkedId ->
+            val radioButton = findViewById<RadioButton>(checkedId)
+            val text = radioButton.text
+            if (text.equals("CSN")) {
+                config.printerType = PRINTER_CSN
+            }
+            if (text.equals("TSC310E")) {
+                config.printerType = PRINTER_TSC310E
+            }
+            ToastUtils.showLong(text)
+        }
     }
 
     private fun idSwitch() {
         val radioGroup = findViewById<RadioGroup>(R.id.rg)
         lifecycleScope.launch {
-            val type =DataStoreManager.getIDCard(this@MainActivity,0).first()
-            when(type){
-                ID_180->{
+            when (config.idCardType) {
+                ID_180 -> {
                     radioGroup.check(R.id.rdID180)
                 }
-                ID_M40->{
+
+                ID_M40 -> {
                     radioGroup.check(R.id.rdIDM40)
                 }
             }
@@ -67,14 +101,10 @@ class MainActivity : AppCompatActivity() {
             val radioButton = findViewById<RadioButton>(checkedId)
             val text = radioButton.text
             if (text.equals("id180")) {
-                lifecycleScope.launch {
-                    DataStoreManager.setIdCard(applicationContext, ID_180)
-                }
+                config.idCardType = ID_180
             }
             if (text.equals("idm40")) {
-                lifecycleScope.launch {
-                    DataStoreManager.setIdCard(applicationContext, ID_M40)
-                }
+                config.idCardType = ID_M40
             }
             ToastUtils.showLong(text)
         }
@@ -112,32 +142,43 @@ class MainActivity : AppCompatActivity() {
     private fun setInfo() {
         val deviceSerial = Build.SERIAL
         val address = getMacAddress()
-        val info = "序列号：${deviceSerial}\nMAC地址:${address}"
         findViewById<TextView>(R.id.tvDeviceInfo).apply {
-            text = info
+            text =
+                "序列号：${deviceSerial}\nMAC地址:${address}\n版本号:${BuildConfig.VERSION_NAME}"
         }
         findViewById<ImageView>(R.id.img).apply {
-            setImageBitmap(generateQrImage(info, 300))
+            setImageBitmap(
+                generateQrImage(
+                    "序列号：${deviceSerial}\nMAC地址:${address}\n版本号:${BuildConfig.VERSION_NAME}",
+                    280
+                )
+            )
         }
-        findViewById<TextView>(R.id.tvVersion).text =
-            "${BuildConfig.FLAVOR}-${BuildConfig.VERSION_NAME}"
         val checkBoxIsCap = findViewById<CheckBox>(R.id.isCap)
         val editRotation = findViewById<EditText>(R.id.editRotation)
-        val editWidth  = findViewById<EditText>(R.id.editWidth)
+        val editWidth = findViewById<EditText>(R.id.editWidth)
         val editHeight = findViewById<EditText>(R.id.editHeight)
         val editMargin = findViewById<EditText>(R.id.editMargin)
-
+        val btnSave = findViewById<Button>(R.id.btnSave)
+        btnSave.setOnClickListener {
+            lifecycleScope.launch {
+                ConfigProvider.saveConfig(applicationContext, config)
+                finish()
+            }
+        }
         lifecycleScope.launch {
-            Contains.load(this@MainActivity)
-            checkBoxIsCap.isChecked = Contains.isCAP
-            editRotation.setText("${Contains.Rotation}")
-            editWidth.setText("${Contains.weight}")
-            editHeight.setText("${Contains.height}")
-            editMargin.setText("${Contains.margin}")
+            checkBoxIsCap.isChecked = config.isCAP
+            editRotation.setText("${config.rotation}")
+            editWidth.setText("${config.weight}")
+            editHeight.setText("${config.height}")
+            editMargin.setText("${config.margin}")
         }
+
         checkBoxIsCap.setOnCheckedChangeListener { ck, b ->
-            checkBoxIsCap.isChecked=b
+            config.isCAP = b
+            ToastUtils.showLong("$b")
         }
+
         editRotation.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
@@ -148,13 +189,13 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun afterTextChanged(p0: Editable) {
-                val rotation: String = p0.toString()
                 runCatching {
-                    Contains.Rotation = rotation.toInt()
-                    lifecycleScope.launch {
-                        DataStoreManager.setRotation(this@MainActivity, Contains.Rotation)
-                    }
+                    if (p0.isEmpty())
+                        return
+                    val rotation: String = p0.toString()
+                    config.rotation = rotation.toInt()
                 }
+
             }
         })
         editWidth.addTextChangedListener(object : TextWatcher {
@@ -167,12 +208,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun afterTextChanged(p0: Editable) {
-                val weight: String = p0.toString()
                 runCatching {
-                    Contains.weight = weight.toInt()
-                    lifecycleScope.launch {
-                        DataStoreManager.setWeight(this@MainActivity, Contains.weight)
-                    }
+                    if (p0.isEmpty())
+                        return
+                    val weight: String = p0.toString()
+                    config.weight = weight.toFloat()
                 }
             }
         })
@@ -186,12 +226,11 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun afterTextChanged(p0: Editable) {
-                val height: String = p0.toString()
                 runCatching {
-                    Contains.height = height.toInt()
-                    lifecycleScope.launch {
-                        DataStoreManager.setHeight(this@MainActivity, Contains.height)
-                    }
+                    if (p0.isEmpty())
+                        return
+                    val height: String = p0.toString()
+                    config.height = height.toFloat()
                 }
             }
         })
@@ -205,15 +244,15 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun afterTextChanged(p0: Editable) {
-                val margin: String = p0.toString()
                 runCatching {
-                    Contains.margin = margin.toInt()
-                    lifecycleScope.launch {
-                        DataStoreManager.setHeight(this@MainActivity, Contains.margin)
-                    }
+                    if (p0.isEmpty())
+                        return
+                    val margin: String = p0.toString()
+                    config.margin = margin.toInt()
                 }
             }
         })
+
     }
 
     private fun generateQrImage(text: String, size: Int): Bitmap? {

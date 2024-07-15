@@ -14,32 +14,6 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:srcCompat="@tools:sample/avatars" />
 
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:id="@+id/layout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="等比旋转"
-            android:textSize="18sp">
-
-        </androidx.appcompat.widget.AppCompatTextView>
-
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/editRotation"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="旋转角度"
-            android:inputType="number"
-            android:textSize="18sp">
-
-        </androidx.appcompat.widget.AppCompatEditText>
-    </androidx.appcompat.widget.LinearLayoutCompat>
-
     <TextView
         android:id="@+id/tvDeviceInfo"
         android:layout_width="wrap_content"
@@ -50,18 +24,6 @@
         app:layout_constraintEnd_toEndOf="@+id/img"
         app:layout_constraintStart_toStartOf="@+id/img"
         app:layout_constraintTop_toBottomOf="@+id/img" />
-
-    <TextView
-        android:id="@+id/tvVersion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Version"
-        android:textSize="28sp"
-        app:layout_constraintBottom_toTopOf="@+id/uploadLog"
-        app:layout_constraintEnd_toEndOf="@+id/tvDeviceInfo"
-        app:layout_constraintStart_toStartOf="@+id/tvDeviceInfo"
-        app:layout_constraintTop_toBottomOf="@+id/tvDeviceInfo" />
 
     <Button
         android:id="@+id/uploadLog"
@@ -79,13 +41,10 @@
         android:id="@+id/rg"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minWidth="200dp"
-        android:minHeight="200dp"
-        app:layout_constraintBottom_toTopOf="@+id/uploadLog"
-        app:layout_constraintEnd_toStartOf="@+id/img"
+        android:padding="16dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layout">
+        app:layout_constraintTop_toTopOf="parent">
 
         <RadioButton
             android:id="@+id/rdID180"
@@ -100,11 +59,30 @@
             android:text="idm40"></RadioButton>
     </RadioGroup>
 
+    <RadioGroup
+        android:id="@+id/rg2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:layout_constraintLeft_toLeftOf="@id/rg"
+        app:layout_constraintTop_toBottomOf="@id/rg">
+
+        <RadioButton
+            android:id="@+id/rbCSN"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CSN"></RadioButton>
+
+        <RadioButton
+            android:id="@+id/rbTSC310E"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TSC310E"></RadioButton>
+    </RadioGroup>
+
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minWidth="100dp"
-        android:minHeight="100dp"
         android:orientation="vertical"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -114,27 +92,78 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:checked="true"
-            android:text="铜版纸"></CheckBox>
+            android:text="铜版纸(孔洞)"></CheckBox>
 
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/editWidth"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="宽"
-            android:minWidth="60dp"></androidx.appcompat.widget.AppCompatEditText>
+            android:minWidth="120dp"
+            android:hint="宽">
 
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/editHeight"
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/editWidth"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="80dp"></androidx.appcompat.widget.AppCompatEditText>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="高"
-            android:minWidth="60dp"></androidx.appcompat.widget.AppCompatEditText>
+            android:minWidth="120dp"
+            android:hint="高">
 
-        <androidx.appcompat.widget.AppCompatEditText
-            android:id="@+id/editMargin"
+            <androidx.appcompat.widget.AppCompatEditText
+                android:id="@+id/editHeight"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="80dp"></androidx.appcompat.widget.AppCompatEditText>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="间距"
-            android:minWidth="60dp"></androidx.appcompat.widget.AppCompatEditText>
+            android:minWidth="120dp"
+            android:hint="间距">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editMargin"
+                style="@style/ThemeOverlay.Material3.TextInputEditText.OutlinedBox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="80dp">
+
+            </com.google.android.material.textfield.TextInputEditText>
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="120dp"
+            android:hint="旋转角">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/editRotation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:textSize="18sp">
+
+            </com.google.android.material.textfield.TextInputEditText>
+        </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
+
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:minHeight="60dp"
+        android:text="保存参数"
+        app:layout_constraintBottom_toTopOf="@+id/uploadLog"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

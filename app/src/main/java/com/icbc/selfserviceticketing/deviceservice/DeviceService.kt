@@ -31,9 +31,14 @@ class DeviceService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder? {
+        LogUtils.file("onBind")
+        var config =Config()
         runBlocking {
-           Contains.Rotation = DataStoreManager.getRotation(applicationContext).first()
+            runCatching {
+                config=ConfigProvider.readConfig(applicationContext).first()
+            }
         }
+        LogUtils.file(config)
         val tts = TTSUtils.getInstance()
         return object : IDeviceService.Stub() {
             @Throws(RemoteException::class)
@@ -63,14 +68,14 @@ class DeviceService : Service() {
             override fun getPrinter(bule_mac: String): IPrinter {
                 Log.d("DeviceService", "getPrinter${bule_mac}")
                 LogUtils.file("getPrinter")
-                return PrinterProxy(applicationContext)
+                return PrinterProxy(applicationContext,config)
             }
 
             @Throws(RemoteException::class)
             override fun getIIDCard(): IIDCard {
                 Log.d("DeviceService", "getIIDCard")
                 LogUtils.file("getIIDCard")
-                return IDCardProxy(this@DeviceService, scope)
+                return IDCardProxy(this@DeviceService, scope,config)
                 //return IDCard(applicationContext)
             }
 

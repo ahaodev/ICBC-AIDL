@@ -51,12 +51,12 @@ class PrinterTest {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
                 val binder = IDeviceService.Stub.asInterface(service)
                 val printer = binder.getPrinter("TSC")
-                Log.d(TAG, "onServiceConnected: 绑定到打印服务")
+                Log.d(TAG, "onServiceConnected: 绑定到打印服务${printer.javaClass.simpleName}")
                 val status = with(printer) {
                     OpenDevice(1, "", "", "")
                     setPageSize(Bundle().apply {
-                        putInt("pageW", 76)
-                        putInt("pageH", 56)
+                        putInt("pageW", 80)
+                        putInt("pageH", 60)
                         putInt("direction", 0)
                         putInt("OffsetX", 0)
                         putInt("OffsetY", 0)
@@ -76,6 +76,15 @@ class PrinterTest {
                         putInt("align", 1)
                         putInt("pageWidth", 8)
                     }, "票卷名称")
+                    addText(Bundle().apply {
+                        putString("fontName", "")
+                        putInt("fontSize", 18)
+                        putInt("rotation", 0)
+                        putInt("iLeft", 50)
+                        putInt("iTop", 50)
+                        putInt("align", 1)
+                        putInt("pageWidth", 8)
+                    }, "末端测试")
                     addText(Bundle().apply {
                         putString("fontName", "")
                         putInt("fontSize", 18)

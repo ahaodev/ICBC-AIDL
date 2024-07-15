@@ -123,7 +123,7 @@ public class ScannerSuperLead extends IScanner.Stub {
                 if (bytesRead > 0) {
 //                String hex = HexDump.toHexString(buffer);
 //                String result = HexDump.hexToAscii(hex);
-                    String result = new String(buffer, 0, bytesRead);
+                    String result = new String(buffer, 0, bytesRead).trim();
                     Log.d("read data", result);
                     onSuccessResult(result);
                 }

@@ -76,24 +76,6 @@ android {
             print(outputFileName)
         }
     }
-    flavorDimensions "idcard", "printer", "scanner"
-    productFlavors {
-        id180_ {
-            dimension "idcard"
-        }
-        idm40_ {
-            dimension "idcard"
-        }
-        superLead_ {
-            dimension "scanner"
-        }
-        tsc310e_ {
-            dimension "printer"
-        }
-        csn_ {
-            dimension "printer"
-        }
-    }
 }
 
 dependencies {

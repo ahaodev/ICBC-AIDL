@@ -17,9 +17,9 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
 import com.blankj.utilcode.util.LogUtils
-import com.icbc.selfserviceticketing.deviceservice.Contains
+import com.icbc.selfserviceticketing.deviceservice.Config
 
-class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
+class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPrinter {
     companion object {
         private const val ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION"
         private var mUsbManager: UsbManager? = null
@@ -118,14 +118,15 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
 
     private fun printerBitmap(bitmap: Bitmap): Int {
         Log.d(TAG, "onCreate: 开始打印")
+        LogUtils.d("Start print ",config.weight,config.height,config.rotation,config.isCAP)
         LogUtils.file("开始打印,bitmap size=${bitmap.byteCount / 1024.0f}KB")
         //sendCommand("SIZE 70 mm,172.46 mm\r\n")//天眼的实际设定
-        sendCommand("SIZE ${Contains.weight} mm,${Contains.height} mm\r\n")
+        sendCommand("SIZE ${config.weight} mm,${config.height} mm\r\n")
         //sendCommand("GAP 4.66 mm,0\r\n")//天眼的实际设定
-        if (Contains.isCAP){
-            sendCommand("GAP ${Contains.margin} mm,0\r\n")
+        if (config.isCAP){
+            sendCommand("GAP ${config.margin} mm,0\r\n")
         }else{
-            sendCommand("BLINE ${Contains.margin} mm,0\r\n")
+            sendCommand("BLINE ${config.margin} mm,0\r\n")
         }
         sendCommand("CLS\r\n")
         try {
@@ -353,101 +354,6 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         }
     }
 
-    fun createBitmap(): Bitmap {
-        bitmapPrinter?.debug = true
-        bitmapPrinter?.setPageSize(pageW = 76.toPix(), pageH = 56.toPix())
-        bitmapPrinter?.addQrCode(
-            iLeft = 1.toPix(),
-            iTop = 1.toPix(),
-            expectedHeight = 24.toPix(),
-            qrCode = "89039049483982<MjAwMDAwMTkyNDIwMjMtMDctMTQyMDIzLTA3LTE0>"
-        )
-
-        bitmapPrinter?.addText(
-            "票券名称",
-            iLeft = 28.toPix(),
-            iTop = 2.toPix(),
-            fontSize = 18,
-            rotation = 0,
-            align = 1,
-            pageWidth = 6.toPix()
-        )
-        bitmapPrinter?.addText(
-            "票券编号",
-            iLeft = 28.toPix(),
-            iTop = 9.toPix(),
-            fontSize = 18,
-            rotation = 0,
-            align = 1,
-            pageWidth = 6.toPix()
-        )
-        bitmapPrinter?.addText(
-            "订单号",
-            iLeft = 1 * DPI,
-            iTop = 27 * DPI,
-            fontSize = 18,
-            rotation = 0,
-            align = 1,
-            pageWidth = 5.toPix()
-        )
-        bitmapPrinter?.addText(
-            "销售时间",
-            iLeft = 28.toPix(),
-            iTop = 16.toPix(),
-            fontSize = 18,
-            rotation = 0,
-            align = 1,
-            pageWidth = 6.toPix()
-        )
-        bitmapPrinter?.addText(
-            "从前有座山，山里有座庙，庙里有个老和尚，老和尚给小和尚讲故事",
-            iLeft = 1.toPix(),
-            iTop = 36.toPix(),
-            fontSize = 18,
-            rotation = 0,
-            align = 1,
-            pageWidth = 72.toPix()
-        )
-
-        bitmapPrinter?.addText(
-            text = "hao88打印测试票",
-            fontSize = 18,
-            rotation = 0,
-            iLeft = 36.toPix(),
-            iTop = 2.toPix(),
-            align = 1,
-            pageWidth = 16.toPix()
-        )
-        bitmapPrinter?.addText(
-            text = "T2307140030831800001",
-            fontSize = 18,
-            rotation = 0,
-            iLeft = 36.toPix(),
-            iTop = 9.toPix(),
-            align = 1,
-            pageWidth = 17.toPix()
-        )
-        bitmapPrinter?.addText(
-            text = "MO202307140000965754",
-            fontSize = 18,
-            rotation = 0,
-            iLeft = 8.toPix(),
-            iTop = 27.toPix(),
-            align = 1,
-            pageWidth = 16.toPix()
-        )
-        bitmapPrinter?.addText(
-            text = "11:20:58",
-            fontSize = 18,
-            rotation = 0,
-            iLeft = 36.toPix(),
-            iTop = 16.toPix(),
-            align = 1,
-            pageWidth = 12.toPix()
-        )
-        return bitmapPrinter!!.drawEnd()
-    }
-
     private fun Int.toPix(): Int {
         return (this * DPI).toInt()
 //        return if (this > 10)
@@ -588,9 +494,9 @@ class TSCUsbPrinter(private val context: Context) : IProxyPrinter {
         LogUtils.file("endPrintDoc ----start")
         var bitmap = bitmapPrinter?.drawEnd()
         bitmap?.let {
-            val rotation = com.icbc.selfserviceticketing.deviceservice.Contains.Rotation.toFloat()
-            LogUtils.file("等比旋转角${rotation}")
-            bitmap= bitmapPrinter?.rotateBitmap(it, rotation)
+            LogUtils.d("等比旋转角${config.rotation}")
+            LogUtils.file("等比旋转角${config.rotation}")
+            bitmap= bitmapPrinter?.rotateBitmap(it, config.rotation.toFloat())
         }
 
         bitmap?.let {

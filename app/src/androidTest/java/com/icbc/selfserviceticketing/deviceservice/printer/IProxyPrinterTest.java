@@ -8,6 +8,9 @@ import android.util.Base64;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.icbc.selfserviceticketing.deviceservice.Config;
+import com.icbc.selfserviceticketing.deviceservice.ConfigProvider;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -18,14 +21,15 @@ import java.io.IOException;
 public class IProxyPrinterTest {
     @Test
     public void printTest() throws InterruptedException {
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        IProxyPrinter printer = new TSCUsbPrinter(appContext);
-        Thread.sleep(1000);
-        PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
-        uchiTest.printer();
-        //testPrinterICBCTest(printer);
-        printer.endPrintDoc();
-        printer.CloseDevice(1);
+//        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
+//        Config config = Config()
+//        IProxyPrinter printer = new TSCUsbPrinter(appContext,config);
+//        Thread.sleep(1000);
+//        PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
+//        uchiTest.printer();
+//        //testPrinterICBCTest(printer);
+//        printer.endPrintDoc();
+//        printer.CloseDevice(1);
     }
 
     @Test

@@ -21,7 +21,7 @@ const val PRINTER_CSN = 1
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 data class Config(
-    var rotation: Int = 90,
+    var rotation: Int = 0,
     var idCardType: Int = ID_M40,
     var scannerType: Int = SCAN_SUPERLEAD,
     var printerType: Int = PRINTER_TSC310E,

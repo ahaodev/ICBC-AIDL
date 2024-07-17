@@ -112,7 +112,7 @@ class BitmapPrinterV3 {
 //        }
         if ("票券名称" == text)
             layoutWidth += 4
-        drawText(text, fontSize, x.toFloat(), y.toFloat(), layoutWidth, alignment)
+        drawText(text, fontSize, x.toFloat(), y.toFloat(), layoutWidth, alignment,rotation)
     }
 
     private fun drawText(
@@ -121,10 +121,24 @@ class BitmapPrinterV3 {
         x: Float,
         y: Float,
         textWidth: Int,
-        align: Layout.Alignment
+        align: Layout.Alignment,
+        rotation: Int
     ) {
         var printerText =text
-        val conditions = listOf("票券名称", "票价", "有效期", "订单号","票型","姓名","票券编号","使用人数","场次","出行时段")
+        val conditions = listOf(
+            "票券名称", "票券编号", "姓名",
+            "证件类型","证件号码","有效期",
+            "订单号","固定文字","使用人数",
+            "票型", "子票信息","销售日期",
+            "销售时间","打印日期","打印时间",
+            "销售时间","打印日期","打印时间",
+            "票价","区域","座位",
+            "演出日期","打印人员","出行时段",
+            "接待单位","可提前入场...","场次",
+            "场地","分销商名称","销售渠道",
+            "可用票数","购票人姓名","购票人手机",
+            "售价","下单人"
+        )
 
         for (condition in conditions) {
             if (printerText.contains(condition)) {

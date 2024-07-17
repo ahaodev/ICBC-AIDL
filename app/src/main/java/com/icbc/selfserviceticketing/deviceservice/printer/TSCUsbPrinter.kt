@@ -19,6 +19,12 @@ import android.util.Log
 import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 
+/**
+ *
+ * 溪水公园 h 203  w 78  dot 300
+ * 溪水公园 h 203  w 78  dot 300
+ *
+ */
 class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPrinter {
     companion object {
         private const val ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION"

@@ -149,12 +149,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<ImageView>(R.id.img).apply {
             setImageBitmap(
                 generateQrImage(
-                    "序列号：${deviceSerial}\nMAC地址:${address}\n版本号:${BuildConfig.VERSION_NAME}",
+                    "${deviceSerial}\n${address}",
                     280
                 )
             )
         }
         val checkBoxIsCap = findViewById<CheckBox>(R.id.isCap)
+        val checkBoxBorder = findViewById<CheckBox>(R.id.cbBorder)
         val editRotation = findViewById<EditText>(R.id.editRotation)
         val editWidth = findViewById<EditText>(R.id.editWidth)
         val editHeight = findViewById<EditText>(R.id.editHeight)
@@ -168,6 +169,7 @@ class MainActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             checkBoxIsCap.isChecked = config.isCAP
+            checkBoxBorder.isChecked = config.enableBorder
             editRotation.setText("${config.rotation}")
             editWidth.setText("${config.weight}")
             editHeight.setText("${config.height}")
@@ -176,6 +178,11 @@ class MainActivity : AppCompatActivity() {
 
         checkBoxIsCap.setOnCheckedChangeListener { ck, b ->
             config.isCAP = b
+            ToastUtils.showLong("$b")
+        }
+
+        checkBoxBorder.setOnCheckedChangeListener { ck, b ->
+            config.enableBorder = b
             ToastUtils.showLong("$b")
         }
 
@@ -248,7 +255,7 @@ class MainActivity : AppCompatActivity() {
                     if (p0.isEmpty())
                         return
                     val margin: String = p0.toString()
-                    config.margin = margin.toInt()
+                    config.margin = margin.toFloat()
                 }
             }
         })
@@ -256,7 +263,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun generateQrImage(text: String, size: Int): Bitmap? {
-        Log.d(BitmapPrinter.TAG, "generateQrImage: text=$text size=$size")
         var qrImage: Bitmap? = null
         if (text.trim { it <= ' ' }.isEmpty()) {
             return null

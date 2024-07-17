@@ -44,30 +44,6 @@ public class IProxyPrinterTest {
         printer.CloseDevice(1);
     }
 
-    @Test
-    public void printBitmapTest() throws InterruptedException {
-        Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        IProxyPrinter printer = new LinePrinter(appContext);
-        Thread.sleep(1000);
-        android.os.Bundle format = new Bundle();
-        format.putInt("rotation", 1);
-        format.putInt("iLeft", 1);
-        format.putInt("iTop", 1);
-        format.putInt("iWidth", 576);
-        format.putInt("iHeight", 1);
-//        QRCodeUtils qrCodeUtils = new QRCodeUtils();
-//        Bitmap bitmap = qrCodeUtils.generateImage("HAHAH", 200);
-//        Bitmap printerImg = qrCodeUtils.createCustomBitmap(bitmap, "卧槽");
-        BitmapPrinter bPrinter = new BitmapPrinter();
-//        bPrinter.drawQrCode("卧槽你打野",200,10,10);
-//        bPrinter.drawText("卧槽你打野",10,10);
-        Bitmap printerImg = bPrinter.drawEnd();
-        String bas64 = bitmapToBase64(printerImg);
-        printer.addImage(format, bas64);
-        printer.CloseDevice(1);
-        //bPrinter.recycle();
-    }
-
     public static String bitmapToBase64(Bitmap bitmap) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);

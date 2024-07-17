@@ -15,6 +15,7 @@ import com.csnprintersdk.csnio.CSNCanvas;
 import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
 import com.csnprintersdk.csnio.csnbase.CSNIOCallBack;
+import com.icbc.selfserviceticketing.deviceservice.Config;
 import com.icbc.selfserviceticketing.deviceservice.Prints;
 
 import java.util.HashMap;
@@ -46,10 +47,11 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
     Context context;
     public int printerStatus = 0;
     private Builder builder = new Builder();
-    BitmapPrinter bitmapPrinter;
-
-    public CSNPrinter(Context applicationContext) {
+    BitmapPrinterV3 bitmapPrinter;
+    private Config config;
+    public CSNPrinter(Context applicationContext, Config config) {
         this.context = applicationContext;
+        this.config=config;
         openDevice();
     }
 
@@ -138,7 +140,7 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
                 .setOffsetX(offsetX)
                 .setOffsetY(offsetY);
         Log.d(TAG, "setPageSize: " + builder.toString());
-        bitmapPrinter =new BitmapPrinter();
+        bitmapPrinter =new BitmapPrinterV3(config);
         bitmapPrinter.setPageSize(pageW * 8, pageH * 8, direction, offsetX, offsetY);
         return 0;
     }

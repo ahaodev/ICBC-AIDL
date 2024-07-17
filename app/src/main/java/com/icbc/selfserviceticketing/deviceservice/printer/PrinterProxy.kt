@@ -18,7 +18,7 @@ class PrinterProxy(var context: Context,val config: Config) : IPrinter.Stub() {
         mProxyPrinter = if (config.printerType== PRINTER_CSN) {
             Log.d(TAG,"GSNPrinter")
             CSNPrinter(
-                context
+                context,config
             )
         } else {
             TSCUsbPrinter(context,config)

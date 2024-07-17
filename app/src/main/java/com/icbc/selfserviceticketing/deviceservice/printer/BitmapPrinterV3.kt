@@ -5,6 +5,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Picture
 import android.graphics.PorterDuff
 import android.os.Build
 import android.text.Layout
@@ -17,6 +18,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
+import com.icbc.selfserviceticketing.deviceservice.Config
 import java.util.*
 import kotlin.math.roundToInt
 
@@ -39,11 +41,10 @@ addText: text= fontSize=14 rotation=0 iLeft=20 iTop=79 align=0 pageWidth=71
 addText: text=2023-06-02 fontSize=14 rotation=0 iLeft=20 iTop=87 align=0 pageWidth=71
 endPrintDoc: 结束打印任务
  */
-class BitmapPrinterV3 {
+class BitmapPrinterV3(val config: Config) {
     private lateinit var bitmap: Bitmap
     private lateinit var canvas: Canvas
     var dpi = 8
-    var debug = false
     private var mPaint: Paint = Paint()
 
     private var textPaint: TextPaint = TextPaint().apply {
@@ -79,51 +80,6 @@ class BitmapPrinterV3 {
         align: Int,
         pageWidth: Int
     ) {
-        var alignment = when (align) {
-            0 -> {
-                Layout.Alignment.ALIGN_NORMAL
-            }
-
-            1 -> {
-                Layout.Alignment.ALIGN_CENTER
-            }
-
-            2 -> {
-                Layout.Alignment.ALIGN_OPPOSITE
-            }
-
-            else -> {
-                Layout.Alignment.ALIGN_NORMAL
-            }
-        }
-        var x = iLeft
-//        if (alignment == Layout.Alignment.ALIGN_CENTER) {
-//            x += (bitmap.width - pageWidth) / 2
-//        }
-        var y = iTop
-        textPaint.textSize = fontSize.toFloat()*2
-        val measureTextWidth = textPaint.measureText(text)//测量宽
-        Log.d(TAG, "measureTextWidth: $measureTextWidth")
-        var layoutWidth: Int =
-            if (pageWidth > measureTextWidth) pageWidth else measureTextWidth.roundToInt()//选择大的
-
-//        if (layoutWidth > (72 * dpi)) {
-//            layoutWidth = 72 * dpi - iLeft
-//        }
-        if ("票券名称" == text)
-            layoutWidth += 4
-        drawText(text, fontSize, x.toFloat(), y.toFloat(), layoutWidth, alignment,rotation)
-    }
-
-    private fun drawText(
-        text: String,
-        textSize: Int,
-        x: Float,
-        y: Float,
-        textWidth: Int,
-        align: Layout.Alignment,
-        rotation: Int
-    ) {
         var printerText =text
         val conditions = listOf(
             "票券名称", "票券编号", "姓名",
@@ -146,21 +102,82 @@ class BitmapPrinterV3 {
                 break
             }
         }
-        textPaint.textSize = textSize.toFloat() // 设置字体大小
+        var alignment = when (align) {
+            0 -> {
+                Layout.Alignment.ALIGN_NORMAL
+            }
+
+            1 -> {
+                Layout.Alignment.ALIGN_CENTER
+            }
+
+            2 -> {
+                Layout.Alignment.ALIGN_OPPOSITE
+            }
+
+            else -> {
+                Layout.Alignment.ALIGN_NORMAL
+            }
+        }
+        var x = iLeft
+//        if (alignment == Layout.Alignment.ALIGN_CENTER) {
+//            x += (bitmap.width - pageWidth) / 2
+//        }
+        var y = iTop
+        textPaint.textSize = fontSize.toFloat()
+        val measureTextWidth = textPaint.measureText(printerText)//测量宽
+        Log.d(TAG, "measureTextWidth: $measureTextWidth")
+        var layoutWidth: Int =
+            if (pageWidth > measureTextWidth) pageWidth else measureTextWidth.roundToInt()//选择大的
+
+//        if (layoutWidth > (72 * dpi)) {
+//            layoutWidth = 72 * dpi - iLeft
+//        }
+        if ("票券名称" == text)
+            layoutWidth += 4
+
+        drawText(printerText, fontSize, x.toFloat(), y.toFloat(), layoutWidth, alignment,rotation)
+    }
+
+    private fun drawText(
+        text: String,
+        fontSize: Int,
+        x: Float,
+        y: Float,
+        textWidth: Int,
+        align: Layout.Alignment,
+        rotation: Int
+    ) {
+        textPaint.textSize = fontSize.toFloat()
         textPaint.color = Color.BLACK
         textPaint.style = Paint.Style.FILL
 
         val staticLayout = StaticLayout.Builder.obtain(
-            printerText, 0, printerText.length, textPaint, textWidth
+            text, 0, text.length, textPaint, textWidth
         )
             .setAlignment(align)
             .build()
-        canvas.save() // 保存当前 Canvas 状态
-        canvas.translate(x, y) // 平移 Canvas，将区域放置在指定位置
-        staticLayout.draw(canvas) // 绘制文本布局
-        canvas.restore() // 恢复 Canvas 状态
-        //canvas.drawText(text, x, y, mPaint)
-        Log.d(TAG, "bitmap drawText: $printerText x=$x y=$y textWidth=$textWidth")
+
+        // 创建一个子 Canvas 记录旋转操作
+        val picture = Picture()
+        val subCanvas = picture.beginRecording(textWidth, staticLayout.height)
+
+        // 在子 Canvas 上绘制文本
+        subCanvas.save()
+        subCanvas.translate(0f, 0f)
+        staticLayout.draw(subCanvas)
+        subCanvas.restore()
+
+        picture.endRecording()
+
+        // 在主 Canvas 上旋转并绘制子 Canvas 的内容
+        canvas.save()
+        canvas.translate(x, y)
+        canvas.rotate(rotation.toFloat(), 0f, 0f)
+        canvas.drawPicture(picture)
+        canvas.restore()
+
+        Log.d(TAG, "drawText: text=$text x=$x y=$y textWidth=$textWidth rotation=$rotation")
     }
 
     /**
@@ -189,16 +206,15 @@ class BitmapPrinterV3 {
     companion object {
         const val TAG = "BitmapPrinterV3"
     }
-    fun drawPadding(left :Float=2f,top :Float=2f,right :Float=2f,bottom:Float=2f){
+    private fun drawPadding(left :Float=8f, top :Float=8f, right :Float=8f, bottom:Float=8f){
         mPaint.style = Paint.Style.STROKE
         canvas.drawRect(left, top, bitmap.width - right, bitmap.height - bottom, mPaint)
     }
     fun drawEnd(): Bitmap {
         //canvas.restore()
-        if (debug){
+        if (config.enableBorder){
             drawPadding()
         }
-        Log.d(TAG, "drawEnd: end ${debug} model")
         return bitmap
     }
 
@@ -239,9 +255,6 @@ class BitmapPrinterV3 {
 
 
     private fun basicBitmap(width: Int, height: Int): Pair<Bitmap, Canvas> {
-        if (width > 576f) {
-            Log.e("打印机服务", "请确认打印机是否支持大于576像素")
-        }
         Log.d(TAG, "basicBitmap: width=$width height=$height")
         LogUtils.file("width=${width},height=${height}")
         val printerBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)

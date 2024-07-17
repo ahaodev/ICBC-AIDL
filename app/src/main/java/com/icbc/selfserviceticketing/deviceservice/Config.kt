@@ -26,10 +26,10 @@ data class Config(
     var scannerType: Int = SCAN_SUPERLEAD,
     var printerType: Int = PRINTER_TSC310E,
     var isCAP: Boolean = true,
-    var margin: Int = 5,
+    var margin: Float = 5f,
     var weight: Float = 80f,
     var height: Float = 80f,
-    var openView: Boolean = false
+    var enableBorder: Boolean = false
 )
 
 object PreferencesKey {

@@ -18,7 +18,7 @@ interface IProxyIDCard {
     /**
      * 读取身份证卡片信息
      *
-     * @param format - 读取身份证卡片信息
+     * @param params - 读取身份证卡片信息
      *               <ul>
      *               </ul>
      */

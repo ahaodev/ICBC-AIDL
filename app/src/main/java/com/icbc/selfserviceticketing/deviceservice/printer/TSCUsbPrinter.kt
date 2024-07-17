@@ -123,8 +123,7 @@ class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPri
     }
 
     private fun printerBitmap(bitmap: Bitmap): Int {
-        Log.d(TAG, "onCreate: 开始打印")
-        LogUtils.d("Start print ",config.weight,config.height,config.rotation,config.isCAP)
+        LogUtils.d("Start print ",config.toString())
         LogUtils.file("开始打印,bitmap size=${bitmap.byteCount / 1024.0f}KB")
         //sendCommand("SIZE 70 mm,172.46 mm\r\n")//天眼的实际设定
         sendCommand("SIZE ${config.weight} mm,${config.height} mm\r\n")
@@ -305,7 +304,6 @@ class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPri
 
 
         // 输出调试日志
-        Log.d(TAG, "sendBitmap: ----")
         LogUtils.file("sendBitmap: ----")
         // 发送打印指令和字节流数据到打印机
         //TscUSB.sendCommand("$command${byteArrayToHex(stream)}$\r\n")
@@ -414,7 +412,7 @@ class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPri
             "setPageSize: pageW=$pageW pageH=$pageH direction=$direction OffsetX=$offsetX OffsetY=$offsetY"
         )
         LogUtils.file(" pageW=$pageW pageH=$pageH direction=$direction OffsetX=$offsetX OffsetY=$offsetY")
-        bitmapPrinter = BitmapPrinterV3()
+        bitmapPrinter = BitmapPrinterV3(config)
         bitmapPrinter?.setPageSize(
             pageW.toPix(),
             pageH.toPix(),

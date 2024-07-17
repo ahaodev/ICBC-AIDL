@@ -114,7 +114,7 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
             idCardReader?.open(0)
             idJob = cScope.launch(Dispatchers.IO) {
                 while (enableReadID) {
-                    delay(600)
+                    delay(300)
                     var cardType = 0
                     try {
                         idCardReader?.findCard(0)

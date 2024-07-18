@@ -35,7 +35,7 @@ public class IProxyPrinterTest {
     @Test
     public void printHaoImg() throws InterruptedException {
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        IProxyPrinter printer = new CSNPrinter(appContext);
+        IProxyPrinter printer = new CSNPrinter(appContext,new Config());
         Thread.sleep(1000);
         PrinterUchiTest uchiTest = new PrinterUchiTest(printer);
         uchiTest.printer();

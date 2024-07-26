@@ -1,9 +1,14 @@
 package com.icbc.ui
 
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
+import android.os.RemoteException
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
@@ -26,12 +31,14 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.icbc.selfserviceticketing.deviceservice.BuildConfig
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
+import com.icbc.selfserviceticketing.deviceservice.DeviceListener
+import com.icbc.selfserviceticketing.deviceservice.DeviceService
 import com.icbc.selfserviceticketing.deviceservice.ID_180
 import com.icbc.selfserviceticketing.deviceservice.ID_M40
+import com.icbc.selfserviceticketing.deviceservice.IDeviceService
 import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN
 import com.icbc.selfserviceticketing.deviceservice.PRINTER_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
-import com.icbc.selfserviceticketing.deviceservice.printer.BitmapPrinter
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -43,6 +50,7 @@ import java.util.EnumMap
 
 class MainActivity : AppCompatActivity() {
     private var config = Config()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -52,21 +60,27 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         lifecycleScope.launch {
             runCatching {
-                config=ConfigProvider.readConfig(applicationContext).first()
+                config = ConfigProvider.readConfig(applicationContext).first()
             }
             setInfo()
             uploadLog()
             idSwitch()
             printerSwitch()
         }
-
+        val btnReadIDCard: Button = findViewById<Button>(R.id.btnReadIDCard)
+        btnReadIDCard.setOnClickListener {
+            val intent = Intent(this, IDCardTestActivity::class.java)
+            startActivity(intent)
+        }
     }
+
     private fun printerSwitch() {
         val radioGroup = findViewById<RadioGroup>(R.id.rg2)
         when (config.printerType) {
             PRINTER_CSN -> {
                 radioGroup.check(R.id.rbCSN)
             }
+
             PRINTER_TSC310E -> {
                 radioGroup.check(R.id.rbTSC310E)
             }

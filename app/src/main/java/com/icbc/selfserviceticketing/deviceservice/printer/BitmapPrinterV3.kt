@@ -97,9 +97,11 @@ class BitmapPrinterV3(val config: Config) {
         )
 
         for (condition in conditions) {
-            if (printerText.contains(condition)) {
-                printerText = "$text:"
-                break
+            if (text.contains(condition)) {
+                if (!text.contains(":")){
+                    printerText = "$text:"
+                    break
+                }
             }
         }
         var alignment = when (align) {

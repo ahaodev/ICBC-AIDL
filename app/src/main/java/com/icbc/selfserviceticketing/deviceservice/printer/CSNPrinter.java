@@ -196,7 +196,7 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
         int expectedHeight = format.getInt("expectedHeight");//16
         //宽 1~16
         int nWidthX = (expectedHeight / builder.pageW) * 16;
-        bitmapPrinter.addQrCode(iLeft * 8, iTop * 8, expectedHeight, qrCode);
+        bitmapPrinter.addQrCode(iLeft * 8, iTop * 8, expectedHeight*8, qrCode);
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight);
         return 0;
     }

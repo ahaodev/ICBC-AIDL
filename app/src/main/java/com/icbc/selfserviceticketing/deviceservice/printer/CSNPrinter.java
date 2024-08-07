@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
 
+import com.blankj.utilcode.util.LogUtils;
 import com.csnprintersdk.csnio.CSNCanvas;
 import com.csnprintersdk.csnio.CSNPOS;
 import com.csnprintersdk.csnio.CSNUSBPrinting;
@@ -198,6 +199,7 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
         int nWidthX = (expectedHeight / builder.pageW) * 16;
         bitmapPrinter.addQrCode(iLeft * 8, iTop * 8, expectedHeight*8, qrCode);
         Log.d(TAG, "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight);
+        LogUtils.file( "addQrCode: iLeft=" + iLeft + " iTop=" + iTop + " expectedHeight=" + expectedHeight);
         return 0;
     }
 

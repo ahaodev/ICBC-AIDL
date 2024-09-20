@@ -8,6 +8,7 @@ import android.hardware.usb.UsbManager;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.serialport.SerialPort;
 import android.util.Log;
 
 import com.blankj.utilcode.util.LogUtils;
@@ -36,8 +37,10 @@ public class ScannerSuperLead extends IScanner.Stub {
 
     public ScannerSuperLead(Context applicationContext) {
         this.context = applicationContext;
+        LogUtils.file("开始扫码");
         UsbManager manager = (UsbManager) context.getSystemService(USB_SERVICE);
         List<UsbSerialDriver> availableDrivers = UsbSerialProber.getDefaultProber().findAllDrivers(manager);
+        LogUtils.file("UsbSerialDriver is Empty?=",availableDrivers.isEmpty());
         if (availableDrivers.isEmpty()) {
             return;
         }
@@ -45,11 +48,14 @@ public class ScannerSuperLead extends IScanner.Stub {
         UsbSerialDriver driver = availableDrivers.get(0);
         UsbDeviceConnection connection = manager.openDevice(driver.getDevice());
         port = driver.getPorts().get(0);// Most devices have just one port (port 0)
+        LogUtils.file("UsbSerialDriver port=",port.toString());
         try {
+            SerialPort.setSuPath("/system/xbin/su");
             port.open(connection);
             port.setParameters(DEFAULT_VENDOR_ID, 8, UsbSerialPort.STOPBITS_1, UsbSerialPort.PARITY_NONE);
         } catch (IOException e) {
             e.printStackTrace();
+            LogUtils.file(e);
         }
     }
 
@@ -60,6 +66,7 @@ public class ScannerSuperLead extends IScanner.Stub {
         enable = true;
         mScannerListener = listener;
         Log.d(TAG, "开始扫码" + enable);
+        LogUtils.file(TAG, "开始扫码" + enable);
         thread.start();
     }
 

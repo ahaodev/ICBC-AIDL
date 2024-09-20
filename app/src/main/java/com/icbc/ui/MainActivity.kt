@@ -1,17 +1,12 @@
 package com.icbc.ui
 
-import android.content.ComponentName
 import android.content.Intent
-import android.content.ServiceConnection
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
-import android.os.RemoteException
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
@@ -31,11 +26,11 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.icbc.selfserviceticketing.deviceservice.BuildConfig
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
-import com.icbc.selfserviceticketing.deviceservice.DeviceListener
-import com.icbc.selfserviceticketing.deviceservice.DeviceService
 import com.icbc.selfserviceticketing.deviceservice.ID_180
 import com.icbc.selfserviceticketing.deviceservice.ID_M40
-import com.icbc.selfserviceticketing.deviceservice.IDeviceService
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
 import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN
 import com.icbc.selfserviceticketing.deviceservice.PRINTER_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
@@ -67,9 +62,14 @@ class MainActivity : AppCompatActivity() {
             idSwitch()
             printerSwitch()
         }
-        val btnReadIDCard: Button = findViewById<Button>(R.id.btnReadIDCard)
+        val btnReadIDCard: Button = findViewById(R.id.btnReadIDCard)
         btnReadIDCard.setOnClickListener {
             val intent = Intent(this, IDCardTestActivity::class.java)
+            startActivity(intent)
+        }
+        val btnScannerTest: Button = findViewById(R.id.btnScanner)
+        btnScannerTest.setOnClickListener {
+            val intent = Intent(this, ScannerTestActivity::class.java)
             startActivity(intent)
         }
     }
@@ -168,7 +168,7 @@ class MainActivity : AppCompatActivity() {
                 )
             )
         }
-        val checkBoxIsCap = findViewById<CheckBox>(R.id.isCap)
+        val rgPaper = findViewById<RadioGroup>(R.id.rgPaper)
         val checkBoxBorder = findViewById<CheckBox>(R.id.cbBorder)
         val editRotation = findViewById<EditText>(R.id.editRotation)
         val editWidth = findViewById<EditText>(R.id.editWidth)
@@ -182,7 +182,19 @@ class MainActivity : AppCompatActivity() {
             }
         }
         lifecycleScope.launch {
-            checkBoxIsCap.isChecked = config.isCAP
+            when (config.paperType) {
+                PAPER_TYPE_CAP -> {
+                    findViewById<RadioButton>(R.id.rbPaperTBZ).isChecked = true
+                }
+
+                PAPER_TYPE_BLINE -> {
+                    findViewById<RadioButton>(R.id.rbPaperHBZ).isChecked = true
+                }
+
+                PAPER_TYPE_BLINEDETECT -> {
+                    findViewById<RadioButton>(R.id.rbPaperLXZ).isChecked = true
+                }
+            }
             checkBoxBorder.isChecked = config.enableBorder
             editRotation.setText("${config.rotation}")
             editWidth.setText("${config.weight}")
@@ -190,9 +202,23 @@ class MainActivity : AppCompatActivity() {
             editMargin.setText("${config.margin}")
         }
 
-        checkBoxIsCap.setOnCheckedChangeListener { ck, b ->
-            config.isCAP = b
-            ToastUtils.showLong("$b")
+        rgPaper.setOnCheckedChangeListener { ck, b ->
+            when (ck.checkedRadioButtonId) {
+                R.id.rbPaperTBZ -> {
+                    ToastUtils.showLong("铜版纸")
+                    config.paperType = PAPER_TYPE_CAP
+                }
+
+                R.id.rbPaperHBZ -> {
+                    ToastUtils.showLong("黑标纸")
+                    config.paperType = PAPER_TYPE_BLINE
+                }
+
+                R.id.rbPaperLXZ -> {
+                    ToastUtils.showLong("连续纸")
+                    config.paperType = PAPER_TYPE_BLINEDETECT
+                }
+            }
         }
 
         checkBoxBorder.setOnCheckedChangeListener { ck, b ->

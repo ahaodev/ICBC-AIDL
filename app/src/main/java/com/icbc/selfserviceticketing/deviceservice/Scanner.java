@@ -35,6 +35,7 @@ public class Scanner extends IScanner.Stub implements Runnable {
     @Override
     public void startScan(Bundle param, long timeout, ScannerListener listener) throws RemoteException {
         if (bStart) return;
+        SerialPort.setSuPath("/system/xbin/su");
         mScannerListener = listener;
         release();
         try {

@@ -18,6 +18,9 @@ import android.os.Parcelable
 import android.util.Log
 import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
 
 /**
  *
@@ -121,17 +124,25 @@ class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPri
         )
         return 0
     }
+    private fun  toDot(){
 
+    }
     private fun printerBitmap(bitmap: Bitmap): Int {
         LogUtils.d("Start print ",config.toString())
         LogUtils.file("开始打印,bitmap size=${bitmap.byteCount / 1024.0f}KB")
         //sendCommand("SIZE 70 mm,172.46 mm\r\n")//天眼的实际设定
         sendCommand("SIZE ${config.weight} mm,${config.height} mm\r\n")
         //sendCommand("GAP 4.66 mm,0\r\n")//天眼的实际设定
-        if (config.isCAP){
-            sendCommand("GAP ${config.margin} mm,0\r\n")
-        }else{
-            sendCommand("BLINE ${config.margin} mm,0\r\n")
+        when(config.paperType){
+            PAPER_TYPE_CAP->{
+                sendCommand("GAP ${config.margin} mm,0\r\n")
+            }
+            PAPER_TYPE_BLINE->{
+                sendCommand("BLINE ${config.margin} mm,0\r\n")
+            }
+            PAPER_TYPE_BLINEDETECT->{
+                sendCommand("BLINEDETECT [${config.height*12},${config.margin*12}]")
+            }
         }
         sendCommand("CLS\r\n")
         try {

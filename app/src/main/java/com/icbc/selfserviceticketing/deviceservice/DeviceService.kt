@@ -52,9 +52,10 @@ class DeviceService : Service() {
             @Throws(RemoteException::class)
             override fun getScanner(cameraId: Int): IScanner {
                 LogUtils.file(cameraId)
-                return ScannerSuperLead(
-                    applicationContext
-                )
+//                return ScannerSuperLead(
+//                    applicationContext
+//                )
+                return Scanner(applicationContext)
             }
 
             @Throws(RemoteException::class)

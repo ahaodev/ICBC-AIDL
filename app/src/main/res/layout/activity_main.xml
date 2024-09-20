@@ -87,12 +87,29 @@
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <CheckBox
-            android:id="@+id/isCap"
+        <RadioGroup
+            android:id="@+id/rgPaper"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="铜版纸(孔洞)"></CheckBox>
+            android:orientation="horizontal"
+            android:layout_height="match_parent" >
+            <RadioButton
+                android:id="@+id/rbPaperTBZ"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="铜版纸" />
+
+            <RadioButton
+                android:id="@+id/rbPaperHBZ"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="黑标纸" />
+
+            <RadioButton
+                android:id="@+id/rbPaperLXZ"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="连续纸" />
+        </RadioGroup>
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="wrap_content"
@@ -181,4 +198,16 @@
         android:text="读身份证测试"
         app:layout_constraintBottom_toTopOf="@+id/btnSave"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btnScanner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="28dp"
+        android:layout_marginBottom="9dp"
+        android:text="扫码测试"
+        app:layout_constraintBottom_toBottomOf="@+id/btnReadIDCard"
+        app:layout_constraintStart_toEndOf="@+id/btnReadIDCard"
+        app:layout_constraintTop_toTopOf="@+id/btnReadIDCard"
+        app:layout_constraintVertical_bias="0.0" />
 </androidx.constraintlayout.widget.ConstraintLayout>

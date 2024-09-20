@@ -37,6 +37,8 @@
 
         </activity>
         <activity android:name="com.icbc.ui.IDCardTestActivity"></activity>
+        <activity android:name="com.icbc.ui.ScannerTestActivity"></activity>
+
         <service
             android:name=".DeviceService"
             android:exported="true">

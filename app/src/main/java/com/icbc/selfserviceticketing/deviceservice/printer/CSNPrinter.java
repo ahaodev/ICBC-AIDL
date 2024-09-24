@@ -8,6 +8,7 @@ import android.graphics.BitmapFactory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.serialport.SerialPort;
 import android.util.Base64;
 import android.util.Log;
 
@@ -62,6 +63,7 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
     }
 
     private void openDevice() {
+        SerialPort.setSuPath("/system/xbin/su");
         final UsbManager mUsbManager = (UsbManager) getApplicationContext().getSystemService(Context.USB_SERVICE);
         mPos.Set(mUsb);
         mUsb.SetCallBack(this);
@@ -72,7 +74,7 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
             while (deviceIterator.hasNext()) {
                 device = deviceIterator.next();
                 String deviceId = String.format(" VID:%04X PID:%04X", device.getVendorId(), device.getProductId());
-                Log.d(TAG, "openDevice: device = " + deviceId + "VendorId=" + device.getVendorId() + "ProductId=" + device.getProductId());
+                LogUtils.file(TAG, "openDevice: device = " + deviceId + "VendorId=" + device.getVendorId() + "ProductId=" + device.getProductId());
                 if (device.getVendorId() == 4070 && device.getProductId() == 33054) {
                     break;
                 }
@@ -85,7 +87,7 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
     @Override
     public int CloseDevice(int DeviceID) {
         es.submit(new TaskClose(mUsb));
-        Log.d(TAG, "CloseDevice: ");
+        LogUtils.file(TAG, "CloseDevice: ");
         return 0;
     }
 
@@ -231,13 +233,21 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
     @Override
     public int endPrintDoc() {
         Log.d(TAG, "endPrintDoc: 打印整个图像");
+        LogUtils.file(TAG, "endPrintDoc: 打印整个图像");
         Bitmap bitmap = bitmapPrinter.drawEnd();
+        Log.d(TAG, "endPrintDoc: bitmap draw end");
         mPos.POS_PrintPicture(bitmap, bitmap.getWidth(), 1, 0);
+        Log.d(TAG, "endPrintDoc: POS_PrintPicture bitmap");
         mPos.POS_FeedLine();
+        Log.d(TAG, "endPrintDoc: POS_FeedLine");
         mPos.POS_FeedLine();
+        Log.d(TAG, "endPrintDoc: POS_FeedLine");
         mPos.POS_FeedLine();
+        Log.d(TAG, "endPrintDoc: POS_FeedLine");
         mPos.POS_FeedLine();
+        Log.d(TAG, "endPrintDoc: POS_FeedLine");
         mPos.POS_HalfCutPaper();
+        Log.d(TAG, "endPrintDoc: POS_FeedLine");
         //mPos.POS_FullCutPaper();
         return 0;
     }

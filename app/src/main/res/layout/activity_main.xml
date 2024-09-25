@@ -203,11 +203,20 @@
         android:id="@+id/btnScanner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="28dp"
-        android:layout_marginBottom="9dp"
+        android:layout_marginStart="32dp"
         android:text="扫码测试"
         app:layout_constraintBottom_toBottomOf="@+id/btnReadIDCard"
         app:layout_constraintStart_toEndOf="@+id/btnReadIDCard"
         app:layout_constraintTop_toTopOf="@+id/btnReadIDCard"
         app:layout_constraintVertical_bias="0.0" />
+
+    <Button
+        android:id="@+id/btnPrinter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="打印测试"
+        android:layout_marginLeft="32dp"
+        app:layout_constraintBottom_toBottomOf="@+id/btnScanner"
+        app:layout_constraintStart_toEndOf="@+id/btnScanner"
+        app:layout_constraintTop_toTopOf="@+id/btnScanner" />
 </androidx.constraintlayout.widget.ConstraintLayout>

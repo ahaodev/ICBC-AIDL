@@ -72,6 +72,10 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, ScannerTestActivity::class.java)
             startActivity(intent)
         }
+        val btnPrinterTest: Button = findViewById(R.id.btnPrinter)
+        btnPrinterTest.setOnClickListener {
+            PrinterTestActivity.start(this, config.printerType)
+        }
     }
 
     private fun printerSwitch() {

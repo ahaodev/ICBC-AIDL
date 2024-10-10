@@ -23,7 +23,6 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
-import com.icbc.selfserviceticketing.deviceservice.BuildConfig
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
 import com.icbc.selfserviceticketing.deviceservice.ID_180
@@ -162,7 +161,7 @@ class MainActivity : AppCompatActivity() {
         val address = getMacAddress()
         findViewById<TextView>(R.id.tvDeviceInfo).apply {
             text =
-                "序列号：${deviceSerial}\nMAC地址:${address}\n版本号:${BuildConfig.VERSION_NAME}"
+                "序列号：${deviceSerial}\nMAC地址:${address}\n版本号:"
         }
         findViewById<ImageView>(R.id.img).apply {
             setImageBitmap(

@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.os.RemoteException
 import android.util.Log
 import com.blankj.utilcode.util.LogUtils
-import com.icbc.selfserviceticketing.deviceservice.BuildConfig
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.IPrinter
 import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN

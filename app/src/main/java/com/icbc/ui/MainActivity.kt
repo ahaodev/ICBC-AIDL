@@ -8,12 +8,7 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.ImageView
 import android.widget.RadioButton
-import android.widget.RadioGroup
-import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -33,62 +28,66 @@ import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
 import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN
 import com.icbc.selfserviceticketing.deviceservice.PRINTER_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
+import com.icbc.selfserviceticketing.deviceservice.databinding.ActivityMainBinding
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
-import kotlinx.coroutines.flow.first
+import com.lxj.xpopup.XPopup
+import com.utils.SystemUtil
+import com.utils.TTYUtils
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.util.EnumMap
 
 
 class MainActivity : AppCompatActivity() {
+
     private var config = Config()
+
+    private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
+        binding.btnReadIDCard.setOnClickListener {
+            val intent = Intent(this, IDCardTestActivity::class.java)
+            startActivity(intent)
+        }
+        binding.btnScanner.setOnClickListener {
+            val intent = Intent(this, ScannerTestActivity::class.java)
+            startActivity(intent)
+        }
+        binding.btnPrinter.setOnClickListener {
+            PrinterTestActivity.start(this, config.printerType)
+        }
     }
 
     override fun onResume() {
         super.onResume()
         lifecycleScope.launch {
             runCatching {
-                config = ConfigProvider.readConfig(applicationContext).first()
+                val storeConfig = ConfigProvider.readConfig(applicationContext).firstOrNull()
+                storeConfig?.let {
+                    config = storeConfig
+                }
             }
             setInfo()
             uploadLog()
             idSwitch()
             printerSwitch()
         }
-        val btnReadIDCard: Button = findViewById(R.id.btnReadIDCard)
-        btnReadIDCard.setOnClickListener {
-            val intent = Intent(this, IDCardTestActivity::class.java)
-            startActivity(intent)
-        }
-        val btnScannerTest: Button = findViewById(R.id.btnScanner)
-        btnScannerTest.setOnClickListener {
-            val intent = Intent(this, ScannerTestActivity::class.java)
-            startActivity(intent)
-        }
-        val btnPrinterTest: Button = findViewById(R.id.btnPrinter)
-        btnPrinterTest.setOnClickListener {
-            PrinterTestActivity.start(this, config.printerType)
-        }
     }
 
     private fun printerSwitch() {
-        val radioGroup = findViewById<RadioGroup>(R.id.rg2)
         when (config.printerType) {
             PRINTER_CSN -> {
-                radioGroup.check(R.id.rbCSN)
+                binding.rg2.check(R.id.rbCSN)
             }
 
             PRINTER_TSC310E -> {
-                radioGroup.check(R.id.rbTSC310E)
+                binding.rg2.check(R.id.rbTSC310E)
             }
         }
-        radioGroup.setOnCheckedChangeListener { group, checkedId ->
+        binding.rg2.setOnCheckedChangeListener { group, checkedId ->
             val radioButton = findViewById<RadioButton>(checkedId)
             val text = radioButton.text
             if (text.equals("CSN")) {
@@ -99,22 +98,30 @@ class MainActivity : AppCompatActivity() {
             }
             ToastUtils.showLong(text)
         }
+        binding.csnPrinterDevPort.text = config.csnDevPort
+        binding.csnPrinterDevPort.setOnClickListener {
+            val data = TTYUtils.getSerialPort().second
+            XPopup.Builder(this)
+                .asCenterList("选择串口", data) { p, t ->
+                    binding.csnPrinterDevPort.text = t
+                    config.csnDevPort = t
+                }.show()
+        }
     }
 
     private fun idSwitch() {
-        val radioGroup = findViewById<RadioGroup>(R.id.rg)
         lifecycleScope.launch {
             when (config.idCardType) {
                 ID_180 -> {
-                    radioGroup.check(R.id.rdID180)
+                    this@MainActivity.binding.rg.check(R.id.rdID180)
                 }
 
                 ID_M40 -> {
-                    radioGroup.check(R.id.rdIDM40)
+                    this@MainActivity.binding.rg.check(R.id.rdIDM40)
                 }
             }
         }
-        radioGroup.setOnCheckedChangeListener { group, checkedId ->
+        binding.rg.setOnCheckedChangeListener { group, checkedId ->
             val radioButton = findViewById<RadioButton>(checkedId)
             val text = radioButton.text
             if (text.equals("id180")) {
@@ -128,7 +135,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun uploadLog() {
-        findViewById<Button>(R.id.uploadLog).setOnClickListener {
+       binding.uploadLog.setOnClickListener {
             Thread {
                 var sbf = StringBuffer()
                 LogUtilsUpload().uploadLogs {
@@ -157,28 +164,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setInfo() {
-        val deviceSerial = Build.SERIAL
-        val address = getMacAddress()
-        findViewById<TextView>(R.id.tvDeviceInfo).apply {
-            text =
-                "序列号：${deviceSerial}\nMAC地址:${address}\n版本号:"
-        }
-        findViewById<ImageView>(R.id.img).apply {
-            setImageBitmap(
-                generateQrImage(
-                    "${deviceSerial}\n${address}",
-                    280
-                )
-            )
-        }
-        val rgPaper = findViewById<RadioGroup>(R.id.rgPaper)
-        val checkBoxBorder = findViewById<CheckBox>(R.id.cbBorder)
-        val editRotation = findViewById<EditText>(R.id.editRotation)
-        val editWidth = findViewById<EditText>(R.id.editWidth)
-        val editHeight = findViewById<EditText>(R.id.editHeight)
-        val editMargin = findViewById<EditText>(R.id.editMargin)
-        val btnSave = findViewById<Button>(R.id.btnSave)
-        btnSave.setOnClickListener {
+        val deviceSerial = SystemUtil.getSN()
+        val address = SystemUtil.getMacAddress()
+        binding.tvDeviceInfo.text = "序列号：${deviceSerial}\nMAC地址:${address}\n"
+        binding.img.setImageBitmap(generateQrImage("${deviceSerial}\n${address}", 280))
+        binding.btnSave.setOnClickListener {
             lifecycleScope.launch {
                 ConfigProvider.saveConfig(applicationContext, config)
                 finish()
@@ -187,25 +177,23 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             when (config.paperType) {
                 PAPER_TYPE_CAP -> {
-                    findViewById<RadioButton>(R.id.rbPaperTBZ).isChecked = true
+                    binding.rbPaperTBZ.isChecked = true
                 }
-
                 PAPER_TYPE_BLINE -> {
-                    findViewById<RadioButton>(R.id.rbPaperHBZ).isChecked = true
+                    binding.rbPaperHBZ.isChecked = true
                 }
-
                 PAPER_TYPE_BLINEDETECT -> {
-                    findViewById<RadioButton>(R.id.rbPaperLXZ).isChecked = true
+                    binding.rbPaperLXZ.isChecked = true
                 }
             }
-            checkBoxBorder.isChecked = config.enableBorder
-            editRotation.setText("${config.rotation}")
-            editWidth.setText("${config.weight}")
-            editHeight.setText("${config.height}")
-            editMargin.setText("${config.margin}")
+            binding.cbBorder.isChecked = config.enableBorder
+            binding.editRotation.setText("${config.rotation}")
+            binding.editWidth.setText("${config.weight}")
+            binding.editHeight.setText("${config.height}")
+            binding.editMargin.setText("${config.margin}")
         }
 
-        rgPaper.setOnCheckedChangeListener { ck, b ->
+        binding.rgPaper.setOnCheckedChangeListener { ck, b ->
             when (ck.checkedRadioButtonId) {
                 R.id.rbPaperTBZ -> {
                     ToastUtils.showLong("铜版纸")
@@ -224,12 +212,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        checkBoxBorder.setOnCheckedChangeListener { ck, b ->
+        binding.cbBorder.setOnCheckedChangeListener { ck, b ->
             config.enableBorder = b
             ToastUtils.showLong("$b")
         }
 
-        editRotation.addTextChangedListener(object : TextWatcher {
+        binding.editRotation.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
             }
@@ -248,7 +236,7 @@ class MainActivity : AppCompatActivity() {
 
             }
         })
-        editWidth.addTextChangedListener(object : TextWatcher {
+        binding.editWidth.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
             }
@@ -266,7 +254,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-        editHeight.addTextChangedListener(object : TextWatcher {
+        binding.editHeight.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
             }
@@ -284,7 +272,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
-        editMargin.addTextChangedListener(object : TextWatcher {
+        binding.editMargin.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
 
             }
@@ -334,17 +322,5 @@ class MainActivity : AppCompatActivity() {
         return qrImage
     }
 
-    private fun getMacAddress(): String? {
-        try {
-            val process = Runtime.getRuntime().exec("su -c cat /sys/class/net/wlan0/address")
-            val reader = BufferedReader(InputStreamReader(process.inputStream))
-            val macAddress = reader.readLine()
-            process.waitFor()
-            reader.close()
-            return macAddress
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return null
-    }
+
 }

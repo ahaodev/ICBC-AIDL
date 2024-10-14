@@ -33,7 +33,8 @@ data class Config(
     var margin: Float = 5f,
     var weight: Float = 80f,
     var height: Float = 80f,
-    var enableBorder: Boolean = false
+    var enableBorder: Boolean = false,
+    var csnDevPort: String ="/dev/ttyACM0",
 )
 
 object PreferencesKey {

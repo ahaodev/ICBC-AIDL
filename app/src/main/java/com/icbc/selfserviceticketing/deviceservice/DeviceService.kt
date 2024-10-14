@@ -52,10 +52,11 @@ class DeviceService : Service() {
             @Throws(RemoteException::class)
             override fun getScanner(cameraId: Int): IScanner {
                 LogUtils.file(cameraId)
-                return ScannerSuperLead(
-                    applicationContext
-                )
-                //return Scanner(applicationContext)
+                val ttys =config.csnDevPort
+//                return ScannerSuperLead(
+//                    applicationContext
+//                )
+                return Scanner(applicationContext,ttys)
             }
 
             @Throws(RemoteException::class)

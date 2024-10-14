@@ -219,4 +219,14 @@
         app:layout_constraintBottom_toBottomOf="@+id/btnScanner"
         app:layout_constraintStart_toEndOf="@+id/btnScanner"
         app:layout_constraintTop_toTopOf="@+id/btnScanner" />
+
+    <TextView
+        android:id="@+id/csnPrinterDevPort"
+        android:layout_width="wrap_content"
+        android:text="选择CSN串口"
+        android:drawableRight="@drawable/baseline_arrow_right_24"
+        android:layout_marginTop="24dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@+id/rg2"
+        app:layout_constraintTop_toBottomOf="@+id/rg" />
 </androidx.constraintlayout.widget.ConstraintLayout>

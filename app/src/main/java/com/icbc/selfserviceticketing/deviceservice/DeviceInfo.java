@@ -7,6 +7,8 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 
+import com.utils.SystemUtil;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -20,46 +22,77 @@ public class DeviceInfo extends IDeviceInfo.Stub {
 
     @Override
     public String getSerialNo() throws RemoteException {
-        return Build.SERIAL;
+        //1Y42336003934170 陈汉
+//        return Build.SERIAL;
+        //return SystemUtil.INSTANCE.getSN();
+        return "1Y42320003003657";
     }
 
     @Override
     public String getIMSI() throws RemoteException {
-        TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        String imsi = telephonyManager.getSubscriberId();
+        String imsi;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            imsi=  SystemUtil.INSTANCE.getIMSI();
+        } else {
+            TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            imsi = telephonyManager.getSubscriberId();
+        }
         return imsi;
     }
 
     @Override
     public String getIMEI() throws RemoteException {
-        TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        String deviceId = telephonyManager.getDeviceId();
-        return deviceId;
+        String deviceID ;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            deviceID=SystemUtil.INSTANCE.getIMEI();
+        }else{
+            TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            deviceID = telephonyManager.getDeviceId();
+        }
+        return deviceID;
     }
 
     @Override
     public String getICCID() throws RemoteException {
-        TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        return telephonyManager.getSimSerialNumber();
+        String simSerialNumber;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            simSerialNumber=SystemUtil.INSTANCE.getICCID();
+        }else{
+            TelephonyManager telephonyManager = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            simSerialNumber = telephonyManager.getSimSerialNumber();
+        }
+        return simSerialNumber;
     }
 
     @Override
     public String getManufacture() throws RemoteException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return "rockchip";
+        }
         return Build.MANUFACTURER;
     }
 
     @Override
     public String getModel() throws RemoteException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return "rk3568";
+        }
         return Build.MODEL;
     }
 
     @Override
     public String getAndroidOSVersion() throws RemoteException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return "11";
+        }
         return Build.VERSION.RELEASE;
     }
 
     @Override
     public String getAndroidKernelVersion() throws RemoteException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return "11";
+        }
         return DeviceInfoUtils.getFormattedKernelVersion();
     }
 
@@ -70,6 +103,9 @@ public class DeviceInfo extends IDeviceInfo.Stub {
 
     @Override
     public String getFirmwareVersion() throws RemoteException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            return "HARDWARE";
+        }
         return Build.HARDWARE;
     }
 

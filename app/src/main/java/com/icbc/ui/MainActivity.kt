@@ -59,6 +59,9 @@ class MainActivity : AppCompatActivity() {
         binding.btnPrinter.setOnClickListener {
             PrinterTestActivity.start(this, config.printerType)
         }
+        binding.cbEnableScannerTTY.setOnCheckedChangeListener{v,b->
+            config.enableScannerSuperLeadSerialPortMode  = b
+        }
     }
 
     override fun onResume() {
@@ -191,6 +194,7 @@ class MainActivity : AppCompatActivity() {
             binding.editWidth.setText("${config.weight}")
             binding.editHeight.setText("${config.height}")
             binding.editMargin.setText("${config.margin}")
+            binding.cbEnableScannerTTY.isChecked = config.enableScannerSuperLeadSerialPortMode
         }
 
         binding.rgPaper.setOnCheckedChangeListener { ck, b ->

@@ -1,6 +1,8 @@
 package com.utils
 
+import android.content.Context
 import android.os.Build
+import android.telephony.TelephonyManager
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -40,6 +42,17 @@ object SystemUtil {
             e.printStackTrace()
         }
         return null
+    }
+    fun getIMEI(): String? {
+        return "1122000998987765"
+    }
+
+    fun getIMSI(): String? {
+        return "310150123456789"
+    }
+
+    fun getICCID(): String? {
+        return "XXXXXX0MFSSYYGXXXXXX"
     }
 
 }

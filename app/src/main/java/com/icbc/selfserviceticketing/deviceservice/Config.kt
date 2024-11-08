@@ -35,6 +35,7 @@ data class Config(
     var height: Float = 80f,
     var enableBorder: Boolean = false,
     var csnDevPort: String ="/dev/ttyACM0",
+    var enableScannerSuperLeadSerialPortMode: Boolean = false
 )
 
 object PreferencesKey {

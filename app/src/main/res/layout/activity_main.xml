@@ -78,6 +78,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="TSC310E"></RadioButton>
+        <RadioButton
+            android:id="@+id/rbLNT"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="LEN-T321/T331"></RadioButton>
     </RadioGroup>
 
     <LinearLayout

@@ -1,6 +1,7 @@
 package com.icbc.ui
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.graphics.Bitmap
@@ -51,6 +52,12 @@ class IDCardTestActivity : AppCompatActivity() {
         override fun onServiceDisconnected(name: ComponentName) {
             // 服务连接断开时的处理逻辑
             Log.d("TEST", "onServiceDisconnected: ")
+        }
+    }
+    companion object {
+        fun start(context: Context) {
+            val intent = Intent(context, IDCardTestActivity::class.java)
+            context.startActivity(intent)
         }
     }
     private val tvName: TextView by lazy { findViewById(R.id.tvName) }

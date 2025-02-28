@@ -1,6 +1,7 @@
 package com.icbc.ui
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
@@ -59,7 +60,12 @@ class ScannerTestActivity : AppCompatActivity() {
             Log.d("TEST", "onServiceDisconnected: ")
         }
     }
-
+    companion object {
+        fun start(context: Context) {
+            val intent = Intent(context, ScannerTestActivity::class.java)
+            context.startActivity(intent)
+        }
+    }
     private val editScanner: EditText by lazy { findViewById(R.id.tvNumber) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

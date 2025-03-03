@@ -1,13 +1,8 @@
 package com.icbc.ui.compose
 
-const val ID_180: String = "ID-180"
-const val ID_M40: String = "ID-M40"
-const val PRINT_CSN: String = "CSN"
-const val PRINT_TSC310E: String = "TSC-310E"
-const val PRINT_T321OR331: String = "T3-321/331"
-const val PAPER_TYPE_TB: String = "铜版纸"
-const val PAPER_TYPE_BLACK: String = "黑标纸"
-const val PAPER_TYPE_AGAIN: String = "连续纸"
+import com.icbc.selfserviceticketing.deviceservice.ID_180
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
+import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
 
 data class ConfigUIState(
     val scanner: ScannerConfigUIState = ScannerConfigUIState(),
@@ -18,18 +13,17 @@ data class ConfigUIState(
 
 data class ScannerConfigUIState(
     val scannerType: String = "HID-Keyboard",
-    val serialPort: String = "/dev/ttyACM0",
+    val serialPort: String = "/dev/ttyS0",
     val enableScannerSuperLeadSerialPortMode: Boolean = false
 )
 
 data class PrinterConfigUIState(
-
     val printType: String = PRINT_CSN,
-    val paperType: String = PAPER_TYPE_TB,
-    val paperWidth: String = "80",
-    val paperHeight: String = "120",
-    val paperPadding: String = "3",
-    val rotationAngle: Int = 0,
+    val paperType: String = PAPER_TYPE_CAP,
+    val paperWidth: String = "0",
+    val paperHeight: String = "0",
+    val paperPadding: String = "0",
+    val rotationAngle: String = "0",
     val printerTTY: String = "ttyS0",
     val enableBorder: Boolean = false,
 )

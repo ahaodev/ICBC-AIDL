@@ -3,11 +3,9 @@ package com.icbc.ui
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.widget.Button
 import android.widget.RadioButton
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -25,8 +23,8 @@ import com.icbc.selfserviceticketing.deviceservice.ID_M40
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
-import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN
-import com.icbc.selfserviceticketing.deviceservice.PRINTER_TSC310E
+import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
+import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
 import com.icbc.selfserviceticketing.deviceservice.databinding.ActivityMainBinding
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
@@ -82,11 +80,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun printerSwitch() {
         when (config.printerType) {
-            PRINTER_CSN -> {
+            PRINT_CSN -> {
                 binding.rg2.check(R.id.rbCSN)
             }
 
-            PRINTER_TSC310E -> {
+            PRINT_TSC310E -> {
                 binding.rg2.check(R.id.rbTSC310E)
             }
         }
@@ -94,10 +92,10 @@ class MainActivity : AppCompatActivity() {
             val radioButton = findViewById<RadioButton>(checkedId)
             val text = radioButton.text
             if (text.equals("CSN")) {
-                config.printerType = PRINTER_CSN
+                config.printerType = PRINT_CSN
             }
             if (text.equals("TSC310E")) {
-                config.printerType = PRINTER_TSC310E
+                config.printerType = PRINT_TSC310E
             }
             ToastUtils.showLong(text)
         }
@@ -191,7 +189,7 @@ class MainActivity : AppCompatActivity() {
             }
             binding.cbBorder.isChecked = config.enableBorder
             binding.editRotation.setText("${config.rotation}")
-            binding.editWidth.setText("${config.weight}")
+            binding.editWidth.setText("${config.width}")
             binding.editHeight.setText("${config.height}")
             binding.editMargin.setText("${config.margin}")
             binding.cbEnableScannerTTY.isChecked = config.enableScannerSuperLeadSerialPortMode
@@ -253,8 +251,8 @@ class MainActivity : AppCompatActivity() {
                 runCatching {
                     if (p0.isEmpty())
                         return
-                    val weight: String = p0.toString()
-                    config.weight = weight.toFloat()
+                    val width: String = p0.toString()
+                    config.width = width.toFloat()
                 }
             }
         })

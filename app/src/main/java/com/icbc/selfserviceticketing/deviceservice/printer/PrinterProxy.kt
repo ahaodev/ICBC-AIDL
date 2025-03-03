@@ -7,14 +7,14 @@ import android.util.Log
 import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.IPrinter
-import com.icbc.selfserviceticketing.deviceservice.PRINTER_CSN
+import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
 
 class PrinterProxy(var context: Context,val config: Config) : IPrinter.Stub() {
     private var mProxyPrinter: IProxyPrinter? = null
     var TAG = "PrinterProxy"
 
     init {
-        mProxyPrinter = if (config.printerType== PRINTER_CSN) {
+        mProxyPrinter = if (config.printerType== PRINT_CSN) {
             Log.d(TAG,"GSNPrinter")
             CSNPrinter(
                 context,config

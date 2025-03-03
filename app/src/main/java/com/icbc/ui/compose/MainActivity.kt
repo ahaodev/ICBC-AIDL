@@ -34,7 +34,7 @@ import com.blankj.utilcode.util.LogUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
-import com.icbc.selfserviceticketing.deviceservice.PRINTER_TSC310E
+import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.printer.QRCodeUtils
 import com.icbc.ui.IDCardTestActivity
 import com.icbc.ui.PrinterTestActivity
@@ -66,35 +66,38 @@ private val qrCodeUtils = QRCodeUtils()
 
 @Composable
 fun APP(name: String, modifier: Modifier = Modifier) {
+    val content = LocalContext.current
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
-    var configState by remember { mutableStateOf(ConfigUIState()) }
     var sn by remember { mutableStateOf("NULL") }
     var mac by remember { mutableStateOf("NULL") }
     var version by remember { mutableStateOf("NULL") }
-    val content = LocalContext.current
-    var ttys by remember { mutableStateOf(listOf("ttyS0", "ttyS1", "ttyS2")) }
     var config by remember { mutableStateOf(Config()) }
-    LaunchedEffect(lifecycleOwner) {
+    var configState by remember { mutableStateOf(ConfigUIState()) }
+    var ttys by remember { mutableStateOf(listOf("ttyS0", "ttyS1", "ttyS2")) }
+    LaunchedEffect(configState) {
         sn = DevicesInfo.getSerialNumber()
         mac = DeviceUtils.getMacAddress()
         version = DevicesInfo.getAppVersion(content) ?: "NULL"
         ttys = TTYUtils.getSerialPort().second.toList()
-        val storeConfig = ConfigProvider.readConfig(content).firstOrNull()
-        storeConfig?.let {
-            config = storeConfig
+        ConfigProvider.readConfig(content).firstOrNull()?.let {
+            config = it
+            configState = ConfigConverter.toUIState(it)
+            LogUtils.d(config, configState)
         }
     }
     val handleUploadLog: () -> Unit = {
         lifecycleOwner.lifecycleScope.launch {
-
+            ToastUtils.showLong("上传日志,请等待")
         }
     }
 
     val handleSave: () -> Unit = {
         lifecycleOwner.lifecycleScope.launch {
-            ToastUtils.showLong("handleSave")
+            config = ConfigConverter.toConfig(configState)
+            ConfigProvider.saveConfig(content, config)
         }
     }
+
     Column(Modifier.padding(16.dp)) {
         Row {
             qrCodeUtils.generateImage("$sn | $mac", 180)?.let {
@@ -106,45 +109,22 @@ fun APP(name: String, modifier: Modifier = Modifier) {
                 Text(text = "SN: $sn")
                 Text(text = "MAC: $mac")
                 Text(text = "Version: $version")
-                Text(text = "$config")
+                Text(text = config.toString())
             }
         }
-        ScannerConfigPage(configState.scanner, ttys) { enableSerialPort, serialPort ->
-            LogUtils.d(enableSerialPort, serialPort)
-            configState = configState.copy(
-                scanner = ScannerConfigUIState(
-                    enableScannerSuperLeadSerialPortMode = enableSerialPort,
-                    serialPort = serialPort
-                )
-            )
-        }
-        IDCardDropdownMenu(configState.idCard, ttys) {
-            configState = configState.copy(
-                idCard = IDCardConfigUIState(
-                    idCardType = it
-                )
-            )
-        }
-        PrinterDropdownMenu(configState.printer, ttys, onPrinterChange = { type, serialPort ->
-            configState = configState.copy(
-                printer = PrinterConfigUIState(
-                    printType = type,
-                    printerTTY = serialPort
-                )
-            )
+        ScannerConfigPage(configState.scanner, ttys) {
+            configState = configState.copy(scanner = it)
+            handleSave.invoke()
 
-        }, onPaperChange = { paperType, paperWidth, paperHeight, paperPadding, paperAngle ->
-            configState = configState.copy(
-                printer = PrinterConfigUIState(
-                    paperType = paperType,
-                    paperWidth = paperWidth,
-                    paperHeight = paperHeight,
-                    paperPadding = paperPadding,
-                    rotationAngle = paperAngle.toInt()
-                )
-            )
-        })
-        val content1 = LocalContext.current
+        }
+        IDCardConfigPage(configState.idCard, ttys) {
+            configState = configState.copy(idCard = it)
+            handleSave.invoke()
+        }
+        PrinterConfigPage(configState.printer, ttys) { newConfig ->
+            configState = configState.copy(printer = newConfig)
+            handleSave.invoke()
+        }
         Column {
             Card(
                 modifier = Modifier
@@ -154,13 +134,18 @@ fun APP(name: String, modifier: Modifier = Modifier) {
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     Row {
-                        Button(onClick = { IDCardTestActivity.start(content1) }) {
+                        Button(onClick = { IDCardTestActivity.start(content) }) {
                             Text(text = "身份证测试")
                         }
-                        Button(onClick = { ScannerTestActivity.start(content1) }) {
+                        Button(onClick = { ScannerTestActivity.start(content) }) {
                             Text(text = "扫码测试")
                         }
-                        Button(onClick = { PrinterTestActivity.start(content1, PRINTER_TSC310E) }) {
+                        Button(onClick = {
+                            PrinterTestActivity.start(
+                                content,
+                                PRINT_TSC310E
+                            )
+                        }) {
                             Text(text = "打印测试")
                         }
                     }

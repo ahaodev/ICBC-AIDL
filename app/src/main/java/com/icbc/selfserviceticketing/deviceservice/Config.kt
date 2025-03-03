@@ -10,28 +10,29 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.map
 
-const val ID_M40 = 0
-const val ID_180 = 1
+const val ID_180: String = "ID-180"
+const val ID_M40: String = "ID-M40"
 
 const val SCAN_SUPERLEAD = 0
 
-const val PRINTER_TSC310E = 0
-const val PRINTER_CSN = 1
+const val PRINT_CSN: String = "CSN"
+const val PRINT_TSC310E: String = "TSC-310E"
+const val PRINT_T321OR331: String = "T3-321/331"
 
-const val PAPER_TYPE_CAP = "CAP"
-const val PAPER_TYPE_BLINE = "BLINE"
-const val PAPER_TYPE_BLINEDETECT = "BLINEDETECT"
+const val PAPER_TYPE_CAP = "铜版纸"
+const val PAPER_TYPE_BLINE = "黑标纸"
+const val PAPER_TYPE_BLINEDETECT = "连续纸"
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 data class Config(
     var rotation: Int = 0,
-    var idCardType: Int = ID_M40,
+    var idCardType: String = ID_M40,
     var scannerType: Int = SCAN_SUPERLEAD,
-    var printerType: Int = PRINTER_TSC310E,
+    var printerType: String = PRINT_CSN,
     var paperType: String = PAPER_TYPE_CAP,
     var margin: Float = 5f,
-    var weight: Float = 80f,
+    var width: Float = 80f,
     var height: Float = 80f,
     var enableBorder: Boolean = false,
     var csnDevPort: String ="/dev/ttyACM0",
@@ -42,7 +43,7 @@ object PreferencesKey {
     /**
      * 全局设置
      */
-    val SETTINGS = stringPreferencesKey("Settings_json_string")
+    val SETTINGS = stringPreferencesKey("CONFIG_JSON")
 }
 
 object ConfigProvider {
@@ -54,6 +55,8 @@ object ConfigProvider {
     }
 
     private fun fromJson(json: String?): Config {
+        if (json.isNullOrEmpty())
+            return Config()
         return gson.fromJson(json, Config::class.java)
     }
 

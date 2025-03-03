@@ -16,7 +16,8 @@ import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.DeviceService
 import com.icbc.selfserviceticketing.deviceservice.IDeviceService
 import com.icbc.selfserviceticketing.deviceservice.IPrinter
-import com.icbc.selfserviceticketing.deviceservice.PRINTER_TSC310E
+import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
+import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,15 +44,15 @@ class PrinterTestActivity : AppCompatActivity() {
     }
 
     companion object {
-        fun start(context: Context, type: Int = PRINTER_TSC310E) {
+        fun start(context: Context, type: String = PRINT_CSN) {
             val intent = Intent(context, PrinterTestActivity::class.java)
             intent.putExtra("type", type) // 传递字符串
             context.startActivity(intent)
         }
     }
 
-    private fun getType(): Int {
-        return intent.getIntExtra("type", PRINTER_TSC310E) // 0 是默认值
+    private fun getType(): String {
+        return intent.getStringExtra("type")?:PRINT_CSN // 0 是默认值
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -71,7 +72,7 @@ class PrinterTestActivity : AppCompatActivity() {
 
     private fun printer() {
         try {
-            if (getType() == PRINTER_TSC310E) {
+            if (getType() == PRINT_TSC310E) {
                 val status = printTSC(iPrinter!!)
                 LogUtils.d("Status =${status}")
                 ToastUtils.showLong("打印状态${status}")

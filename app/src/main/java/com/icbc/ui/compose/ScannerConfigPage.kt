@@ -21,22 +21,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.blankj.utilcode.util.LogUtils
 
 @Composable
 fun ScannerConfigPage(
     scanner: ScannerConfigUIState,
     ttys: List<String>,
-    onScannerConfigChange: (Boolean, String) -> Unit
+    onConfigChange: (newConfig: ScannerConfigUIState) -> Unit
 ) {
-    var enableUSB2SerialPort by remember { mutableStateOf(scanner.enableScannerSuperLeadSerialPortMode) }
-    var expandedTTYSelector by remember { mutableStateOf(false) }
-    var scannerTTYSelected by remember { mutableStateOf(scanner.serialPort) }
+    LogUtils.d(scanner)
     Card(
         modifier = Modifier
             .padding(8.dp)
             .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
+        var expandedTTYSelector by remember { mutableStateOf(false) } // 只保留下拉菜单的展开状态
+
+        fun handleConfigChange(
+            enableUSB2SerialPort: Boolean = scanner.enableScannerSuperLeadSerialPortMode,
+            serialPort: String = scanner.serialPort
+        ) {
+            onConfigChange(
+                ScannerConfigUIState(
+                    scannerType = scanner.scannerType,
+                    serialPort = serialPort,
+                    enableScannerSuperLeadSerialPortMode = enableUSB2SerialPort
+                )
+            )
+        }
 
         Column(
             horizontalAlignment = Alignment.Start,
@@ -47,49 +60,35 @@ fun ScannerConfigPage(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 8.dp)
             ) {
-                Text(
-                    "启用USB转串口模式(CSN) "
-                )
+                Text("启用USB转串口模式(CSN) ")
                 Checkbox(
-                    checked = enableUSB2SerialPort,
-                    onCheckedChange = {
-                        enableUSB2SerialPort = it
-                        onScannerConfigChange(
-                            enableUSB2SerialPort,
-                            scannerTTYSelected
-                        )
-                    }
+                    checked = scanner.enableScannerSuperLeadSerialPortMode,
+                    onCheckedChange = { handleConfigChange(enableUSB2SerialPort = it) }
                 )
 
-                if (enableUSB2SerialPort) {
+                if (scanner.enableScannerSuperLeadSerialPortMode) {
                     Text("选择串口号:")
                     Box {
                         TextButton(onClick = { expandedTTYSelector = true }) {
-                            Text(scannerTTYSelected)
+                            Text(scanner.serialPort) // 直接使用 scanner.serialPort
                         }
                         DropdownMenu(
                             expanded = expandedTTYSelector,
-                            onDismissRequest = {
-                                expandedTTYSelector = false
-                            }
+                            onDismissRequest = { expandedTTYSelector = false }
                         ) {
                             ttys.forEach { option ->
                                 DropdownMenuItem(
                                     text = { Text(option) },
                                     onClick = {
-                                        scannerTTYSelected = option
+
+                                        handleConfigChange(serialPort = option)
                                         expandedTTYSelector = false
-                                        onScannerConfigChange(
-                                            enableUSB2SerialPort,
-                                            scannerTTYSelected
-                                        )
                                     }
                                 )
                             }
                         }
                     }
                 }
-
             }
         }
     }
@@ -98,6 +97,6 @@ fun ScannerConfigPage(
 @Preview(showBackground = true, widthDp = 720, heightDp = 1080)
 @Composable
 fun ScannerPagePreview() {
-    ScannerConfigPage(ScannerConfigUIState(), listOf("ttyS0", "ttyS1", "ttyS2")) { _, _ ->
+    ScannerConfigPage(ScannerConfigUIState(), listOf("ttyS0", "ttyS1", "ttyS2")) { newConfig ->
     }
 }

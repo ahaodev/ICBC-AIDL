@@ -6,64 +6,84 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
+import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
+import com.icbc.selfserviceticketing.deviceservice.PRINT_T321OR331
+import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 
 @Composable
-fun PrinterDropdownMenu(
+fun PrinterConfigPage(
     printerConfig: PrinterConfigUIState,
     ttys: List<String>,
-    onPrinterChange: (type: String, serialPort: String) -> Unit,
-    onPaperChange: (
-        paperType: String,
-        paperWidth: String, paperHeight: String, paperPadding: String, paperAngle: String
-    ) -> Unit
+    onConfigChange: (newConfig: PrinterConfigUIState) -> Unit
 ) {
     var expandedPrinterTypeSelector by remember { mutableStateOf(false) }
     var expandedPaperSelector by remember { mutableStateOf(false) }
     var expandedTTYSelector by remember { mutableStateOf(false) }
 
-    var printerTypeSelected by remember { mutableStateOf(printerConfig.printType) }
     val printerTypeOptions = listOf(PRINT_CSN, PRINT_TSC310E, PRINT_T321OR331)
+    val paperTypeOptions = listOf(PAPER_TYPE_CAP, PAPER_TYPE_BLINE, PAPER_TYPE_BLINEDETECT)
 
+    var currentPaperWidth by remember { mutableStateOf(TextFieldValue(printerConfig.paperWidth)) }
+    var currentPaperHeight by remember { mutableStateOf(TextFieldValue(printerConfig.paperHeight)) }
+    var currentPaperPadding by remember { mutableStateOf(TextFieldValue(printerConfig.paperPadding)) }
+    var currentPaperAngle by remember { mutableStateOf(TextFieldValue(printerConfig.rotationAngle)) }
 
-    var printerTTYSelected by remember { mutableStateOf(printerConfig.printerTTY) }
-
-    val paperTypeOptions = listOf(PAPER_TYPE_TB, PAPER_TYPE_BLACK, PAPER_TYPE_AGAIN)
-    var paperTypeSelected by remember { mutableStateOf(printerConfig.paperType) }
-
-
-    var paperWidth by remember { mutableStateOf(printerConfig.paperWidth) }
-    var paperHeight by remember { mutableStateOf(printerConfig.paperHeight) }
-    var paperPadding by remember { mutableStateOf(printerConfig.paperPadding) }
-    var paperAngle by remember { mutableStateOf("${printerConfig.rotationAngle}") }
-    fun handlePrinterChange() {
-        onPrinterChange(printerTypeSelected, printerTTYSelected)
+    // 同步外部状态变化
+    LaunchedEffect(printerConfig) {
+        currentPaperWidth = TextFieldValue(printerConfig.paperWidth, selection = currentPaperWidth.selection)
+        currentPaperHeight = TextFieldValue(printerConfig.paperHeight, selection = currentPaperHeight.selection)
+        currentPaperPadding = TextFieldValue(printerConfig.paperPadding, selection = currentPaperPadding.selection)
+        currentPaperAngle = TextFieldValue(printerConfig.rotationAngle, selection = currentPaperAngle.selection)
     }
 
-    fun handlePaperChange() {
-        onPaperChange(
-            paperTypeSelected,
-            paperWidth,
-            paperHeight,
-            paperPadding,
-            paperAngle
+    fun handleConfigChange(
+        printType: String = printerConfig.printType,
+        printerTTY: String = printerConfig.printerTTY,
+        paperType: String = printerConfig.paperType,
+        paperWidth: String = currentPaperWidth.text,
+        paperHeight: String = currentPaperHeight.text,
+        paperPadding: String = currentPaperPadding.text,
+        rotationAngle: String = currentPaperAngle.text,
+        enableBorder: Boolean = printerConfig.enableBorder
+    ) {
+        onConfigChange(
+            PrinterConfigUIState(
+                printType = printType,
+                printerTTY = printerTTY,
+                paperType = paperType,
+                paperWidth = paperWidth,
+                paperHeight = paperHeight,
+                paperPadding = paperPadding,
+                rotationAngle = rotationAngle,
+                enableBorder = enableBorder
+            )
         )
     }
+
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -78,7 +98,7 @@ fun PrinterDropdownMenu(
                 Text(text = "选择打印机:")
                 Box {
                     TextButton(onClick = { expandedPrinterTypeSelector = true }) {
-                        Text(printerTypeSelected)
+                        Text(printerConfig.printType)
                     }
                     DropdownMenu(
                         expanded = expandedPrinterTypeSelector,
@@ -88,9 +108,8 @@ fun PrinterDropdownMenu(
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
-                                    printerTypeSelected = option
+                                    handleConfigChange(printType = option)
                                     expandedPrinterTypeSelector = false
-                                    handlePrinterChange()
                                 }
                             )
                         }
@@ -103,7 +122,7 @@ fun PrinterDropdownMenu(
                     Text(text = "选择串口号:")
                     Box {
                         TextButton(onClick = { expandedTTYSelector = true }) {
-                            Text(printerTTYSelected)
+                            Text(printerConfig.printerTTY)
                         }
                         DropdownMenu(
                             expanded = expandedTTYSelector,
@@ -113,9 +132,8 @@ fun PrinterDropdownMenu(
                                 DropdownMenuItem(
                                     text = { Text(option) },
                                     onClick = {
-                                        printerTTYSelected = option
+                                        handleConfigChange(printerTTY = option)
                                         expandedTTYSelector = false
-                                        handlePrinterChange()
                                     }
                                 )
                             }
@@ -131,7 +149,7 @@ fun PrinterDropdownMenu(
                 Text(text = "纸张类型:")
                 Box {
                     TextButton(onClick = { expandedPaperSelector = true }) {
-                        Text(paperTypeSelected)
+                        Text(printerConfig.paperType)
                     }
                     DropdownMenu(
                         expanded = expandedPaperSelector,
@@ -141,68 +159,88 @@ fun PrinterDropdownMenu(
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
-                                    paperTypeSelected = option
+                                    handleConfigChange(paperType = option)
                                     expandedPaperSelector = false
-                                    handlePaperChange()
                                 }
                             )
                         }
                     }
                 }
             }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(start = 8.dp)
             ) {
                 OutlinedTextField(
                     modifier = Modifier.width(100.dp),
-                    value = paperWidth,
+                    value = currentPaperWidth,
                     onValueChange = { newValue ->
-                        paperWidth = newValue
-                        handlePaperChange()
+                        if (newValue.text.all { newValue.text.matches(Regex("^\\d*\\.?\\d*$"))|| it == ' ' } || newValue.text.isEmpty()) {
+                            currentPaperWidth = newValue
+                            handleConfigChange(paperWidth = newValue.text)
+                        }
                     },
                     label = { Text("纸宽度") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 OutlinedTextField(
                     modifier = Modifier.width(100.dp),
-                    value = paperHeight,
+                    value = currentPaperHeight,
                     onValueChange = { newValue ->
-                        paperHeight = newValue
-                        handlePaperChange()
+                        if (newValue.text.all { newValue.text.matches(Regex("^\\d*\\.?\\d*$"))|| it == ' ' } || newValue.text.isEmpty()) {
+                            currentPaperHeight = newValue
+                            handleConfigChange(paperHeight = newValue.text)
+                        }
                     },
                     label = { Text("纸高度") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 OutlinedTextField(
                     modifier = Modifier.width(100.dp),
-                    value = paperPadding,
+                    value = currentPaperPadding,
                     onValueChange = { newValue ->
-                        paperPadding = newValue
-                        handlePaperChange()
+                        if (newValue.text.all { newValue.text.matches(Regex("^\\d*\\.?\\d*$"))|| it == ' ' } || newValue.text.isEmpty()) {
+                            currentPaperPadding = newValue
+                            handleConfigChange(paperPadding = newValue.text)
+                        }
                     },
                     label = { Text("纸间隙") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 OutlinedTextField(
                     modifier = Modifier.width(100.dp),
-                    value = paperAngle,
+                    value = currentPaperAngle,
                     onValueChange = { newValue ->
-                        paperAngle = newValue
-                        handlePaperChange()
+                        if (newValue.text.all { it.isDigit() || it == ' ' } || newValue.text.isEmpty()) {
+                            currentPaperAngle = newValue
+                            handleConfigChange(rotationAngle = newValue.text)
+                        }
                     },
                     label = { Text("版面旋转角") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("打印调试边框")
+                Checkbox(
+                    checked = printerConfig.enableBorder,
+                    onCheckedChange = { handleConfigChange(enableBorder = it) }
                 )
             }
         }
-
     }
-
 }
 
 @Preview(showBackground = true, widthDp = 720, heightDp = 1080)
 @Composable
 fun PrinterPreview() {
-    PrinterDropdownMenu(
+    PrinterConfigPage(
         PrinterConfigUIState(),
         listOf("ttyS0", "ttyS1", "ttyS2"),
-        onPrinterChange = { _, _ -> },
-        onPaperChange = { _, _, _, _, _ -> })
+        onConfigChange = { newValue -> })
 }

@@ -20,16 +20,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.icbc.selfserviceticketing.deviceservice.ID_180
+import com.icbc.selfserviceticketing.deviceservice.ID_M40
 
 @Composable
-fun IDCardDropdownMenu(
+fun IDCardConfigPage(
     idCard: IDCardConfigUIState,
-    ttys: List<String>,
-    onIDCardConfigChange: (String) -> Unit
+    ttys: List<String>, // 未使用，但保留参数以保持签名一致
+    onConfigChange: (newConfig: IDCardConfigUIState) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) } // This is fine
-    var selectedOption by remember { mutableStateOf(ID_M40) } // This is fine
+    var expanded by remember { mutableStateOf(false) }
     val options = listOf(ID_M40, ID_180)
+
+    fun handleConfigChange(idCardType: String = idCard.idCardType) {
+        onConfigChange(IDCardConfigUIState(idCardType = idCardType))
+    }
 
     Card(
         modifier = Modifier
@@ -37,13 +42,10 @@ fun IDCardDropdownMenu(
             .fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(16.dp)
-            ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "选择读卡器:")
-                Box {
+                Box(modifier = Modifier.padding(start = 8.dp)) {
                     TextButton(onClick = { expanded = true }) {
                         Text(idCard.idCardType)
                     }
@@ -55,25 +57,22 @@ fun IDCardDropdownMenu(
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
-                                    selectedOption = option
+                                    handleConfigChange(idCardType = option)
                                     expanded = false
-                                    onIDCardConfigChange(option)
                                 }
                             )
                         }
                     }
                 }
             }
-
         }
-
     }
 }
 
 @Preview(showBackground = true, widthDp = 720, heightDp = 1080)
 @Composable
 fun IDCardPreview() {
-    IDCardDropdownMenu(IDCardConfigUIState(), listOf("ttyS0", "ttyS1", "ttyS2")){
+    IDCardConfigPage(IDCardConfigUIState(), listOf("ttyS0", "ttyS1", "ttyS2")){
 
     }
 }

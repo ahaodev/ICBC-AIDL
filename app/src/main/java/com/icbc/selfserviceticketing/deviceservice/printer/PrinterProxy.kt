@@ -8,19 +8,36 @@ import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.IPrinter
 import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
+import com.icbc.selfserviceticketing.deviceservice.PRINT_T321OR331
+import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 
-class PrinterProxy(var context: Context,val config: Config) : IPrinter.Stub() {
+class PrinterProxy(var context: Context, val config: Config) : IPrinter.Stub() {
     private var mProxyPrinter: IProxyPrinter? = null
     var TAG = "PrinterProxy"
 
     init {
-        mProxyPrinter = if (config.printerType== PRINT_CSN) {
-            Log.d(TAG,"GSNPrinter")
-            CSNPrinter(
-                context,config
-            )
-        } else {
-            TSCUsbPrinter(context,config)
+        Log.d(TAG, "Printer Type = ${config.printerType}")
+        LogUtils.file("Printer Type = ${config.printerType}")
+        mProxyPrinter = when (config.printerType) {
+            PRINT_CSN -> {
+                CSNPrinter(
+                    context, config
+                )
+            }
+
+            PRINT_TSC310E -> {
+                TSCUsbPrinter(context, config)
+            }
+
+            PRINT_T321OR331 -> {
+                EPSONPrinter(context, config)
+            }
+
+            else -> {
+                CSNPrinter(
+                    context, config
+                )
+            }
         }
         Log.d(TAG, "PrinterProxy: " + mProxyPrinter!!.javaClass.simpleName)
         LogUtils.file(mProxyPrinter!!.javaClass.simpleName)

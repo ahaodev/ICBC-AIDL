@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Parcelable
 import androidx.annotation.RequiresApi
 import com.blankj.utilcode.util.LogUtils
+import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.idcard.ID180v2
 import com.icbc.selfserviceticketing.deviceservice.idcard.IDM40
 import com.icbc.selfserviceticketing.deviceservice.scanner.ScannerSuperLead
@@ -74,6 +75,9 @@ class UsbBroadcastReceiver : BroadcastReceiver() {
         }
         //mVendorId=4611,mProductId=311 TSC310E打印机
         if (device.vendorId==4611&&device.productId==311){
+            return true
+        }
+        if (device.vendorId==5251&&device.productId==21571&&device.productName=="LENOO-T321BS"){
             return true
         }
         return false

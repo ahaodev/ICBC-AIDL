@@ -143,7 +143,7 @@ fun APP(name: String, modifier: Modifier = Modifier) {
                         Button(onClick = {
                             PrinterTestActivity.start(
                                 content,
-                                PRINT_TSC310E
+                                config.printerType
                             )
                         }) {
                             Text(text = "打印测试")

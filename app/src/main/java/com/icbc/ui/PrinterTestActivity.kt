@@ -9,6 +9,7 @@ import android.os.IBinder
 import android.os.RemoteException
 import android.util.Log
 import android.widget.Button
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.LogUtils
@@ -17,6 +18,7 @@ import com.icbc.selfserviceticketing.deviceservice.DeviceService
 import com.icbc.selfserviceticketing.deviceservice.IDeviceService
 import com.icbc.selfserviceticketing.deviceservice.IPrinter
 import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
+import com.icbc.selfserviceticketing.deviceservice.PRINT_T321OR331
 import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +31,7 @@ class PrinterTestActivity : AppCompatActivity() {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
             val binder = IDeviceService.Stub.asInterface(service)
             try {
-                iPrinter = binder.getPrinter("TSC")
+                iPrinter = binder.getPrinter("auto")
                 Log.d("TAG", "onServiceConnected: 绑定到打印服务")
             } catch (e: RemoteException) {
                 e.printStackTrace()
@@ -52,7 +54,7 @@ class PrinterTestActivity : AppCompatActivity() {
     }
 
     private fun getType(): String {
-        return intent.getStringExtra("type")?:PRINT_CSN // 0 是默认值
+        return intent.getStringExtra("type") ?: PRINT_CSN // 0 是默认值
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,27 +65,38 @@ class PrinterTestActivity : AppCompatActivity() {
                 ToastUtils.showLong("未找到打印机")
                 return@setOnClickListener
             }
-            lifecycleScope.launch(Dispatchers.IO){
+            lifecycleScope.launch(Dispatchers.IO) {
                 printer()
             }
         }
+        findViewById<TextView>(R.id.tvPrinterType).text = getType()
 
     }
 
     private fun printer() {
         try {
-            if (getType() == PRINT_TSC310E) {
-                val status = printTSC(iPrinter!!)
-                LogUtils.d("Status =${status}")
-                ToastUtils.showLong("打印状态${status}")
-            } else {
-                val status = printCSN(iPrinter!!)
-                LogUtils.d("Status =${status}")
-                ToastUtils.showLong("打印状态${status}")
+            when (getType()) {
+                PRINT_TSC310E -> {
+                    val status = printTSC(iPrinter!!)
+                    LogUtils.d("Status =${status}")
+                    ToastUtils.showLong("打印状态${status}")
+                }
+
+                PRINT_CSN -> {
+                    val status = printCSN(iPrinter!!)
+                    LogUtils.d("Status =${status}")
+                    ToastUtils.showLong("打印状态${status}")
+                }
+
+                PRINT_T321OR331 -> {
+                    val status = printTSC(iPrinter!!)
+                    LogUtils.d("Status =${status}")
+                    ToastUtils.showLong("打印状态${status}")
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
-            ToastUtils.showLong(e.message)
+            ToastUtils.showLong(e.toString())
         }
     }
 

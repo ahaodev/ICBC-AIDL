@@ -42,9 +42,28 @@ addText: text=2023-06-02 fontSize=14 rotation=0 iLeft=20 iTop=87 align=0 pageWid
 endPrintDoc: 结束打印任务
  */
 class BitmapPrinterV3(val config: Config) {
+
+    companion object {
+        const val TAG = "BitmapPrinterV3"
+        private val dpi = 8
+        private val TITLE_FIELDS = listOf(
+            "票券名称", "票券编号", "姓名",
+            "证件类型","证件号码","有效期",
+            "订单号","固定文字","使用人数",
+            "票型", "子票信息","销售日期",
+            "销售时间","打印日期","打印时间",
+            "销售时间","打印日期","打印时间",
+            "票价","区域","座位",
+            "演出日期","打印人员","出行时段",
+            "接待单位","可提前入场...","场次",
+            "场地","分销商名称","销售渠道",
+            "可用票数","购票人姓名","购票人手机",
+            "售价","下单人"
+        )
+    }
     private lateinit var bitmap: Bitmap
     private lateinit var canvas: Canvas
-    var dpi = 8
+
     private var mPaint: Paint = Paint()
 
     private var textPaint: TextPaint = TextPaint().apply {
@@ -81,22 +100,7 @@ class BitmapPrinterV3(val config: Config) {
         pageWidth: Int
     ) {
         var printerText =text
-        val conditions = listOf(
-            "票券名称", "票券编号", "姓名",
-            "证件类型","证件号码","有效期",
-            "订单号","固定文字","使用人数",
-            "票型", "子票信息","销售日期",
-            "销售时间","打印日期","打印时间",
-            "销售时间","打印日期","打印时间",
-            "票价","区域","座位",
-            "演出日期","打印人员","出行时段",
-            "接待单位","可提前入场...","场次",
-            "场地","分销商名称","销售渠道",
-            "可用票数","购票人姓名","购票人手机",
-            "售价","下单人"
-        )
-
-        for (condition in conditions) {
+        for (condition in TITLE_FIELDS) {
             if (text.contains(condition)) {
                 if (!text.contains(":")){
                     printerText = "$text:"
@@ -198,16 +202,13 @@ class BitmapPrinterV3(val config: Config) {
     }
 
     private fun drawQrCode(context: String, size: Int, x: Float, y: Float) {
-        val bitmap = generateQrImage(text = context, size)
+        val bitmap = generateQrBitmap(text = context, size)
         if (null != bitmap) {
             Log.d(TAG, "drawQrCode: x=$x y=$y")
             canvas.drawBitmap(bitmap, x, y, null)
         }
     }
 
-    companion object {
-        const val TAG = "BitmapPrinterV3"
-    }
     private fun drawPadding(left :Float=8f, top :Float=8f, right :Float=8f, bottom:Float=8f){
         mPaint.style = Paint.Style.STROKE
         canvas.drawRect(left, top, bitmap.width - right, bitmap.height - bottom, mPaint)
@@ -225,32 +226,28 @@ class BitmapPrinterV3(val config: Config) {
         bitmap.recycle()
     }
 
-    private fun generateQrImage(text: String, size: Int): Bitmap? {
+    private fun generateQrBitmap(text: String, size: Int): Bitmap? {
         Log.d(TAG, "generateQrImage: text=$text size=$size")
         var qrImage: Bitmap? = null
-        if (text.trim { it <= ' ' }.isEmpty()) {
-            return null
+        if (text.trim().isEmpty()) return null
+
+        val hints = EnumMap<EncodeHintType, Any>(EncodeHintType::class.java).apply {
+            put(EncodeHintType.CHARACTER_SET, "UTF-8")
+            put(EncodeHintType.MARGIN, 1)
         }
-        val hintMap: MutableMap<EncodeHintType, Any?> = EnumMap(
-            EncodeHintType::class.java
-        )
-        hintMap[EncodeHintType.CHARACTER_SET] = "UTF-8"
-        hintMap[EncodeHintType.MARGIN] = 1
-        val qrCodeWriter = QRCodeWriter()
         try {
-            val byteMatrix = qrCodeWriter.encode(
-                text, BarcodeFormat.QR_CODE, size, size, hintMap
-            )
-            val height = byteMatrix.height
-            val width = byteMatrix.width
+            val matrix = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, size, size, hints)
+            val height = matrix.height
+            val width = matrix.width
             qrImage = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
             for (x in 0 until width) {
                 for (y in 0 until height) {
-                    qrImage.setPixel(x, y, if (byteMatrix[x, y]) Color.BLACK else Color.WHITE)
+                    qrImage.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)
                 }
             }
         } catch (e: WriterException) {
             e.printStackTrace()
+            LogUtils.file(e)
         }
         return qrImage
     }

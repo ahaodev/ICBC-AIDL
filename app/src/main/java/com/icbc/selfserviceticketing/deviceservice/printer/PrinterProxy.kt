@@ -30,7 +30,7 @@ class PrinterProxy(var context: Context, val config: Config) : IPrinter.Stub() {
             }
 
             PRINT_T321OR331 -> {
-                EPSONPrinter(context, config)
+                EPSONUSBPrinter(context, config)
             }
 
             else -> {

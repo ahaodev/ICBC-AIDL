@@ -16,6 +16,7 @@ import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
@@ -28,7 +29,7 @@ import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
  * 溪水公园 h 203  w 78  dot 300
  *
  */
-class EPSONPrinter(private val context: Context, val config: Config) : IProxyPrinter {
+class EPSONUSBPrinter(private val context: Context, val config: Config) : IProxyPrinter {
     companion object {
         private const val ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION"
         private var mUsbManager: UsbManager? = null
@@ -84,7 +85,12 @@ class EPSONPrinter(private val context: Context, val config: Config) : IProxyPri
             PendingIntent.FLAG_IMMUTABLE
         )
         val filter = IntentFilter(ACTION_USB_PERMISSION)
-        context.registerReceiver(mUsbReceiver, filter)
+        ContextCompat.registerReceiver(
+            context,
+            mUsbReceiver,
+            filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
         val accessoryList = mUsbManager!!.accessoryList
         val deviceList = mUsbManager!!.deviceList
         LogUtils.d("Detect ", deviceList.size.toString() + " USB device(s) found")
@@ -92,7 +98,7 @@ class EPSONPrinter(private val context: Context, val config: Config) : IProxyPri
         while (deviceIterator.hasNext()) {
             device = deviceIterator.next()
             LogUtils.d(device.toString())
-            if (device!!.vendorId == 4611) {
+            if (device!!.vendorId == 5251) {
                 //Toast.makeText(MainActivity.this, device.toString(), 0).show();
                 LogUtils.d(device.toString())
                 break

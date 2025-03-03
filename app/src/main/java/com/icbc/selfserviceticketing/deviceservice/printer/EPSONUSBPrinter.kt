@@ -13,6 +13,7 @@ import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
 import android.os.Bundle
+import android.util.Log
 import androidx.core.content.ContextCompat
 import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
@@ -171,6 +172,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     }
 
     private fun convertBitmapToByteArray(bitmap: Bitmap, widthBytes: Int): ByteArray {
+        Log.d(TAG, "convertBitmapToByteArray START")
         val stream = ByteArray(widthBytes * bitmap.height) { -1 }
 
         for (y in 0 until bitmap.height) {
@@ -183,10 +185,12 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
                 }
             }
         }
+        Log.d(TAG, "convertBitmapToByteArray END")
         return stream
     }
 
     private fun sendLargeData(data: ByteArray) {
+        Log.d(TAG, "sendLargeData: START")
         var offset = 0
         while (offset < data.size) {
             val chunkSize = min(MAX_USBFS_BUFFER_SIZE, data.size - offset)
@@ -194,6 +198,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
             usbConnection?.bulkTransfer(usbEndpoint, chunk, chunk.size, TIMEOUT)
             offset += chunkSize
         }
+        Log.d(TAG, "sendLargeData: END")
     }
 
     private fun Int.toPix(): Int = this * DPI

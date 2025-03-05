@@ -27,10 +27,10 @@ class DeviceService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        CrashUtils.init(CrashListener())
+//        CrashUtils.init(CrashListener())
     }
 
-    override fun onBind(intent: Intent): IBinder? {
+    override fun onBind(intent: Intent): IBinder {
         LogUtils.file("onBind")
         var config =Config()
         runBlocking {

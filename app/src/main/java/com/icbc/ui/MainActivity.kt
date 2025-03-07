@@ -137,30 +137,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun uploadLog() {
        binding.uploadLog.setOnClickListener {
-            Thread {
-                var sbf = StringBuffer()
-                LogUtilsUpload().uploadLogs {
-                    try {
-                        sbf.append("\n")
-                            .append(JSONObject(it).getJSONObject("data").getString("url"))
-                    } catch (e: java.lang.Exception) {
-                        LogUtils.file(e)
-                        sbf.append("上传日志\n $it")
-                    }
-                }
-                runOnUiThread {
-                    val builder: AlertDialog.Builder = AlertDialog.Builder(this)
-                    builder.setTitle("提示")
-                    builder.setMessage(sbf.toString())
-                    builder.setPositiveButton(
-                        "关闭"
-                    ) { dialog, which -> // 点击关闭按钮后，关闭对话框
-                        dialog.dismiss()
-                    }
-                    val dialog: AlertDialog = builder.create()
-                    dialog.show()
-                }
-            }.start()
+
         }
     }
 

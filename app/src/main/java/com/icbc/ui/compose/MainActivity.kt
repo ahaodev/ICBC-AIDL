@@ -1,9 +1,11 @@
 package com.icbc.ui.compose
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,14 +38,18 @@ import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
 import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.printer.QRCodeUtils
+import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
 import com.icbc.ui.IDCardTestActivity
 import com.icbc.ui.PrinterTestActivity
 import com.icbc.ui.ScannerTestActivity
 import com.icbc.ui.compose.ui.theme.ICBCAIDLTheme
+import com.lxj.xpopup.XPopup
 import com.utils.DevicesInfo
 import com.utils.TTYUtils
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,7 +72,7 @@ private val qrCodeUtils = QRCodeUtils()
 
 @Composable
 fun APP(name: String, modifier: Modifier = Modifier) {
-    val content = LocalContext.current
+    val context = LocalContext.current
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     var sn by remember { mutableStateOf("NULL") }
     var mac by remember { mutableStateOf("NULL") }
@@ -77,24 +83,51 @@ fun APP(name: String, modifier: Modifier = Modifier) {
     LaunchedEffect(configState) {
         sn = DevicesInfo.getSerialNumber()
         mac = DeviceUtils.getMacAddress()
-        version = DevicesInfo.getAppVersion(content) ?: "NULL"
+        version = DevicesInfo.getAppVersion(context) ?: "NULL"
         ttys = TTYUtils.getSerialPort().second.toList()
-        ConfigProvider.readConfig(content).firstOrNull()?.let {
+        ConfigProvider.readConfig(context).firstOrNull()?.let {
             config = it
             configState = ConfigConverter.toUIState(it)
             LogUtils.d(config, configState)
         }
     }
     val handleUploadLog: () -> Unit = {
-        lifecycleOwner.lifecycleScope.launch {
+        lifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             ToastUtils.showLong("上传日志,请等待")
+            var sbf = StringBuffer()
+            LogUtilsUpload().uploadLogs {
+                try {
+                    sbf.append(JSONObject(it).getJSONObject("data").getString("url")).append("\n")
+                } catch (e: java.lang.Exception) {
+                    LogUtils.file(e)
+                    sbf.append("上传日志\n $it")
+                }
+            }
+            with(Dispatchers.Main){
+                XPopup.Builder(context)
+                    .asConfirm("已上传", sbf.toString()) {
+                    }
+                    .show()
+//                val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+//                builder.setTitle("提示")
+//                builder.setMessage(sbf.toString())
+//                builder.setPositiveButton(
+//                    "关闭"
+//                ) { dialog, which -> // 点击关闭按钮后，关闭对话框
+//                    dialog.dismiss()
+//                }
+//                val dialog: AlertDialog = builder.create()
+//                dialog.show()
+            }
         }
     }
 
     val handleSave: () -> Unit = {
         lifecycleOwner.lifecycleScope.launch {
             config = ConfigConverter.toConfig(configState)
-            ConfigProvider.saveConfig(content, config)
+            ConfigProvider.saveConfig(context, config)
+            ToastUtils.showLong("保存成功")
+            (context as? Activity)?.finish() // 结束当前 Activity
         }
     }
 
@@ -134,15 +167,15 @@ fun APP(name: String, modifier: Modifier = Modifier) {
             ) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     Row {
-                        Button(onClick = { IDCardTestActivity.start(content) }) {
+                        Button(onClick = { IDCardTestActivity.start(context) }) {
                             Text(text = "身份证测试")
                         }
-                        Button(onClick = { ScannerTestActivity.start(content) }) {
+                        Button(onClick = { ScannerTestActivity.start(context) }) {
                             Text(text = "扫码测试")
                         }
                         Button(onClick = {
                             PrinterTestActivity.start(
-                                content,
+                                context,
                                 config.printerType
                             )
                         }) {

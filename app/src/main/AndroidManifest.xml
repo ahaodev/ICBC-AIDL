@@ -107,19 +107,21 @@
             android:value="false"
             />
         <!-- enable the performance API by setting a sample-rate, adjust in production env -->
+        <!-- 设置性能监控（Tracing）的采样率 0~1.0 -->
         <meta-data
             android:name="io.sentry.traces.sample-rate"
-            android:value="1.0"
+            android:value="0.2"
             />
         <!-- enable profiling when starting transactions, adjust in production env -->
+        <!-- 设置性能剖析（Profiling）的采样率 -->
         <meta-data
             android:name="io.sentry.traces.profiling.sample-rate"
-            android:value="1.0"
+            android:value="0.2"
             />
         <!-- enable app start profiling -->
         <meta-data
             android:name="io.sentry.traces.profiling.enable-app-start"
-            android:value="true"
+            android:value="false"
             />
     </application>
 

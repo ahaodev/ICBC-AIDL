@@ -35,8 +35,9 @@ class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPri
         private var mPermissionIntent: PendingIntent? = null
         private var hasPermissionToCommunicate = false
         private var device: UsbDevice? = null
+        private const val DENSITY: Int = 300 // 打印机分辨率
         private val MAX_USBFS_BUFFER_SIZE = 1024*10
-        private var DPI = 12
+        private var DPI = 12 //(DENSITY / 25.4f)
         private var TIMEOUT = 5000
         val TAG = "TSCUsbPrinter"
     }
@@ -455,17 +456,18 @@ class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPri
          * pageWidth(int)：文本打印宽度，单位:MM，如果内容超过宽度会自动
          * 换行
          */
-        val fontName = format!!.getString("fontName")
-        val fontSize = format!!.getInt("fontSize")
-        val rotation = format!!.getInt("rotation")
-        val iLeft = format!!.getInt("iLeft")
-        val iTop = format!!.getInt("iTop")
-        val align = format!!.getInt("align")
-        val pageWidth = format!!.getInt("pageWidth")
+        val fontName = format.getString("fontName")
+        val fontSize = format.getInt("fontSize")
+        val rotation = format.getInt("rotation")
+        val iLeft = format.getInt("iLeft")
+        val iTop = format.getInt("iTop")
+        val align = format.getInt("align")
+        val pageWidth = format.getInt("pageWidth")
         Log.d(
             TAG,
             "addText: text=$text fontSize=$fontSize rotation=$rotation iLeft=$iLeft iTop=$iTop align=$align pageWidth=$pageWidth"
         )
+
         bitmapPrinter?.addText(
             text,
             fontSize,

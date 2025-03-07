@@ -22,12 +22,17 @@ import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
 import java.nio.charset.StandardCharsets
 import kotlin.math.min
+import kotlin.math.roundToInt
 
+/**
+ * 励能T321/T331
+ */
 class EPSONUSBPrinter(private val context: Context, private val config: Config) : IProxyPrinter {
     companion object {
         private const val ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION"
         private const val MAX_USBFS_BUFFER_SIZE = 10240
-        private const val DPI = 12
+        private const val DENSITY: Int = 203 // 打印机分辨率
+        private const val DPI = 8 // (203 / 25.4f)
         private const val TIMEOUT = 5000
         private const val TAG = "EPSONUSBPrinter"
     }
@@ -37,7 +42,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     private var usbConnection: UsbDeviceConnection? = null
     private var usbInterface: UsbInterface? = null
     private var usbEndpoint: UsbEndpoint? = null
-    private var bitmapPrinter: BitmapPrinterV3? = null
+    private var bitmapPrinter: BitmapPrinterV4? = null
     private var hasPermission = false
     private var pageWidth = 0
     private var pageHeight = 0
@@ -140,16 +145,16 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     } ?: false
 
     private fun printerBitmap(bitmap: Bitmap): Int = runCatching {
-        LogUtils.d(TAG, "Printing bitmap, size=${bitmap.byteCount / 1024.0f}KB")
+        Log.d(TAG, "Printing bitmap, size=${bitmap.byteCount / 1024.0f}KB")
         sendCommand("SIZE ${config.width} mm,${config.height} mm\r\n")
         sendPaperTypeCommand()
         sendCommand("CLS\r\n")
         sendBitmap(0, 0, bitmap)
         sendCommand("PRINT 1\r\n")
-        LogUtils.d(TAG, "Print completed")
+        Log.d(TAG, "Print completed")
         0
     }.getOrElse {
-        LogUtils.e(TAG, "Print failed", it)
+        Log.e(TAG, "Print failed", it)
         -1
     }
 
@@ -192,11 +197,13 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     private fun sendLargeData(data: ByteArray) {
         Log.d(TAG, "sendLargeData: START")
         var offset = 0
+        Log.d(TAG, "sendLargeData: bufferSize =${data.size}")
         while (offset < data.size) {
             val chunkSize = min(MAX_USBFS_BUFFER_SIZE, data.size - offset)
             val chunk = data.copyOfRange(offset, offset + chunkSize)
             usbConnection?.bulkTransfer(usbEndpoint, chunk, chunk.size, TIMEOUT)
             offset += chunkSize
+            Log.d(TAG, "sendLargeData:  offset=${offset}")
         }
         Log.d(TAG, "sendLargeData: END")
     }
@@ -221,8 +228,8 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
             val direction = getInt("direction")
             val offsetX = getInt("OffsetX")
             val offsetY = getInt("OffsetY")
-
-            bitmapPrinter = BitmapPrinterV3(config).apply {
+            Log.d(TAG, "setPageSize: pageW=${pageWidth},pageH=${pageHeight},direction=${direction},offsetX=${offsetX},offsetY=${offsetY}")
+            bitmapPrinter = BitmapPrinterV4(config).apply {
                 setPageSize(
                     pageWidth.toPix(),
                     pageHeight.toPix(),
@@ -231,7 +238,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
                     offsetY.toPix()
                 )
             }
-            LogUtils.d(TAG, "Page size set: $pageWidth x $pageHeight")
+            Log.d(TAG, "Page size set: $pageWidth x $pageHeight")
             return 0
         }
     }
@@ -240,14 +247,21 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
 
     override fun addText(format: Bundle, text: String): Int {
         with(format) {
+            val fontSize = getInt("fontSize")
+            val rotation = getInt("rotation")
+            val iLeft = getInt("iLeft")
+            val iTop = getInt("iTop")
+            val align = getInt("align")
+            val pageWidth = getInt("pageWidth")
+            Log.d(TAG, "addText: fontSis=${fontSize},rotation=${rotation},iLeft=${iLeft},iTop=${iTop},align=${align},pageWidth=${pageWidth}")
             bitmapPrinter?.addText(
                 text,
-                getInt("fontSize"),
-                getInt("rotation"),
-                getInt("iLeft").toPix(),
-                getInt("iTop").toPix(),
-                getInt("align"),
-                getInt("pageWidth").toPix()
+                fontSize * PRINT_FONT_SCALE ,
+                rotation,
+                iLeft.toPix(),
+                iTop.toPix(),
+                align,
+                pageWidth.toPix()
             )
             return 0
         }
@@ -257,10 +271,14 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         format ?: return -1
         qrCode ?: return -1
         with(format) {
+            val iLeft = getInt("iLeft")
+            val iTop = getInt("iTop")
+            val expectedHeight = getInt("expectedHeight")
+            Log.d(TAG, "addQrCode: iLeft=${iLeft},iTop=${iTop},expectedHeight=${expectedHeight}")
             bitmapPrinter?.addQrCode(
-                getInt("iLeft").toPix(),
-                getInt("iTop").toPix(),
-                getInt("expectedHeight").toPix(),
+                iLeft.toPix(),
+                iTop.toPix(),
+                expectedHeight.toPix(),
                 qrCode
             )
             return 0

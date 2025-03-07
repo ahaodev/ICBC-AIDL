@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.blankj.utilcode.util.LogUtils
 import com.blankj.utilcode.util.ToastUtils
+import com.icbc.selfserviceticketing.deviceservice.Config
+import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
 import com.icbc.selfserviceticketing.deviceservice.DeviceService
 import com.icbc.selfserviceticketing.deviceservice.IDeviceService
 import com.icbc.selfserviceticketing.deviceservice.IPrinter
@@ -22,10 +24,11 @@ import com.icbc.selfserviceticketing.deviceservice.PRINT_T321OR331
 import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class PrinterTestActivity : AppCompatActivity() {
-
+    private var config = Config()
     var iPrinter: IPrinter? = null
     private val mConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -70,7 +73,14 @@ class PrinterTestActivity : AppCompatActivity() {
             }
         }
         findViewById<TextView>(R.id.tvPrinterType).text = getType()
-
+        lifecycleScope.launch {
+            runCatching {
+                val storeConfig = ConfigProvider.readConfig(applicationContext).firstOrNull()
+                storeConfig?.let {
+                    config = storeConfig
+                }
+            }
+        }
     }
 
     private fun printer() {
@@ -117,8 +127,8 @@ class PrinterTestActivity : AppCompatActivity() {
         val status = with(printer) {
             OpenDevice(1, "", "", "")
             setPageSize(Bundle().apply {
-                putInt("pageW", 80)
-                putInt("pageH", 60)
+                putInt("pageW", config.width.toInt())
+                putInt("pageH", config.height.toInt())
                 putInt("direction", 0)
                 putInt("OffsetX", 0)
                 putInt("OffsetY", 0)
@@ -248,7 +258,7 @@ class PrinterTestActivity : AppCompatActivity() {
                 putInt("fontSize", 18)
                 putInt("rotation", 0)
                 putInt("iLeft", 23)
-                putInt("iTop", 1)
+                putInt("iTop", 2)
                 putInt("align", 1)
                 putInt("pageWidth", 8)
             }, "票卷名称")

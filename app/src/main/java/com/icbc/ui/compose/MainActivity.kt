@@ -108,16 +108,6 @@ fun APP(name: String, modifier: Modifier = Modifier) {
                     .asConfirm("已上传", sbf.toString()) {
                     }
                     .show()
-//                val builder: AlertDialog.Builder = AlertDialog.Builder(context)
-//                builder.setTitle("提示")
-//                builder.setMessage(sbf.toString())
-//                builder.setPositiveButton(
-//                    "关闭"
-//                ) { dialog, which -> // 点击关闭按钮后，关闭对话框
-//                    dialog.dismiss()
-//                }
-//                val dialog: AlertDialog = builder.create()
-//                dialog.show()
             }
         }
     }

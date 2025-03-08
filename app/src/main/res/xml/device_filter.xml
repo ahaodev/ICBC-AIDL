@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <!-- T321 打印机 -->
+    <usb-device vendor-id="5251" product-id="21571" />
+    <!-- ZKT 180-->
+    <usb-device vendor-id="1024" product-id="50010" />
+
+
     <usb-device vendor-id="1024" product-id="50010" />
     <!-- - - - default prober - - - -->
 

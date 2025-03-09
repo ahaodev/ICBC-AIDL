@@ -117,7 +117,6 @@ fun APP(name: String, modifier: Modifier = Modifier) {
             config = ConfigConverter.toConfig(configState)
             ConfigProvider.saveConfig(context, config)
             ToastUtils.showLong("保存成功")
-            (context as? Activity)?.finish() // 结束当前 Activity
         }
     }
 
@@ -187,7 +186,10 @@ fun APP(name: String, modifier: Modifier = Modifier) {
         Button(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp), onClick = handleSave
+                .padding(start = 8.dp, end = 8.dp), onClick = {
+                    handleSave.invoke()
+                    (context as? Activity)?.finish() // 结束当前 Activity
+                }
         ) {
             Text(text = "保存参数")
         }

@@ -19,7 +19,7 @@
     <uses-permission android:name="android.permission.USB_PERMISSION" />
 
     <uses-feature android:name="android.hardware.usb.host" />
-
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <application
         android:name="com.icbc.App"
         android:allowBackup="true"

@@ -13,16 +13,28 @@ import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import androidx.core.content.ContextCompat
+import com.blankj.utilcode.util.ActivityUtils
+import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.blankj.utilcode.util.LogUtils
+import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
+import com.icbc.selfserviceticketing.deviceservice.printer.Constants.ERROR
+import com.icbc.selfserviceticketing.deviceservice.printer.Constants.MEIHEIBIAO
+import com.icbc.selfserviceticketing.deviceservice.printer.Constants.MEIZHILE
+import com.icbc.selfserviceticketing.deviceservice.printer.Constants.OK
+import com.icbc.selfserviceticketing.deviceservice.printer.Constants.QUEZHI
+import com.icbc.ui.compose.MainActivity
+import com.lxj.xpopup.XPopup
+import com.lxj.xpopup.util.XPermission
 import java.nio.charset.StandardCharsets
 import kotlin.math.min
-import kotlin.math.roundToInt
+
 
 /**
  * 励能T321/T331
@@ -30,18 +42,23 @@ import kotlin.math.roundToInt
 class EPSONUSBPrinter(private val context: Context, private val config: Config) : IProxyPrinter {
     companion object {
         private const val ACTION_USB_PERMISSION = "com.android.example.USB_PERMISSION"
-        private const val MAX_USBFS_BUFFER_SIZE = 10240
+        private var MAX_USBFS_BUFFER_SIZE = 10240
+        private var maxReadBuffer = 10240
         private const val DENSITY: Int = 203 // 打印机分辨率
         private const val DPI = 8 // (203 / 25.4f)
         private const val TIMEOUT = 5000
         private const val TAG = "EPSONUSBPrinter"
+
+        // Status Polling Command Hex: 1B 21 3F 0A
+        private val READ_STATUS: ByteArray = byteArrayOf(0x1B, 0x21, 0x3F, 0x0A) // <ESC>!?
     }
 
     private var usbManager: UsbManager? = null
     private var usbDevice: UsbDevice? = null
     private var usbConnection: UsbDeviceConnection? = null
     private var usbInterface: UsbInterface? = null
-    private var usbEndpoint: UsbEndpoint? = null
+    private var usbEndpointOut: UsbEndpoint? = null
+    private var usbEndpointIn: UsbEndpoint? = null
     private var bitmapPrinter: BitmapPrinterV4? = null
     private var hasPermission = false
     private var pageWidth = 0
@@ -52,8 +69,9 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
             if (ACTION_USB_PERMISSION == intent.action) {
                 synchronized(this) {
                     val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
-                    hasPermission = intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
-                            && device != null
+                    hasPermission =
+                        intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)
+                                && device != null
                     usbDevice = device
                 }
             }
@@ -62,7 +80,42 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
 
     init {
         initialize()
-        connectUsbPrinter()
+        val openPortStatus = connectUsbPrinter()
+        if (openPortStatus != 0) {
+            LogUtils.e(TAG, "Failed to open port")
+        }
+    }
+
+    // read usb printer status ,send READ_STATUS command
+    fun checkPrinterStatus(): List<String> {
+        val statusCommand = READ_STATUS
+        val sendStatus =
+            usbConnection?.bulkTransfer(usbEndpointOut, statusCommand, statusCommand.size, TIMEOUT)
+        val statusBuffer = ByteArray(1)
+        val readStatus =
+            usbConnection?.bulkTransfer(usbEndpointIn, statusBuffer, statusBuffer.size, TIMEOUT)
+        val statusBytes = readStatus(statusBuffer)
+        return listOf(
+            if (statusBytes[0] == 1.toByte()) "缺纸" else "",
+            if (statusBytes[1] == 1.toByte()) "面盖打开错误" else "",
+            if (statusBytes[2] == 1.toByte()) "切刀错误" else "",
+            if (statusBytes[3] == 1.toByte()) "黑标或孔洞定位错误" else "",
+            "", // byteArray[4] is undefined
+            if (statusBytes[5] == 1.toByte()) "纸将尽" else "",
+            if (statusBytes[6] == 1.toByte()) "错误(出纸嘴有纸)" else "",
+            if (statusBytes[7] == 1.toByte()) "打印中" else ""
+        )
+    }
+
+    // read status byte array
+    private fun readStatus(read: ByteArray): ByteArray {
+        val byteArr = ByteArray(8) // 一个字节八位
+        var value = read[0].toInt()
+        for (i in 0..7) {
+            byteArr[i] = (value and 1).toByte() // 获取最低位
+            value = value shr 1 // 每次右移一位
+        }
+        return byteArr
     }
 
     private fun initialize(): Result<Unit> = runCatching {
@@ -103,7 +156,12 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
 
     private fun openPort(manager: UsbManager, device: UsbDevice): Boolean = runCatching {
         usbInterface = device.getInterface(0)
-        usbEndpoint = usbInterface?.getEndpoint(0)
+        usbInterface?.let {
+            assignEndpoint(it)
+        }
+
+//        usbEndpointOut = usbInterface?.getEndpoint(0)
+//        usbEndpointIn = usbInterface?.getEndpoint(128)
         usbConnection = manager.openDevice(device).apply {
             claimInterface(usbInterface, true)
         }
@@ -111,6 +169,36 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     }.getOrElse {
         LogUtils.e(TAG, "Failed to open port", it)
         false
+    }
+
+    private fun assignEndpoint(usbInterface: UsbInterface) {
+        for (i in 0 until usbInterface.endpointCount) {
+            val ep = usbInterface.getEndpoint(i)
+            LogUtils.i("UsbEndpoint类型：${ep.type}")
+            when (ep.type) {
+                2 -> {
+                    if (ep.direction == 0) {
+                        usbEndpointOut = ep
+                        MAX_USBFS_BUFFER_SIZE = usbEndpointOut?.maxPacketSize ?: 0
+                    }
+                    if (ep.direction == 128) {
+                        usbEndpointIn = ep
+                        maxReadBuffer = usbEndpointIn?.maxPacketSize ?: 0
+                    }
+                }
+
+                3 -> {
+                    if (ep.direction == 0) {
+                        usbEndpointOut = ep
+                        MAX_USBFS_BUFFER_SIZE = usbEndpointOut?.maxPacketSize ?: 0
+                    }
+                    if (ep.direction == 128) {
+                        usbEndpointIn = ep
+                        maxReadBuffer = usbEndpointIn?.maxPacketSize ?: 0
+                    }
+                }
+            }
+        }
     }
 
     private fun closePort(): Boolean = usbConnection?.let { connection ->
@@ -128,7 +216,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
 
     private fun resetConnection() {
         usbConnection = null
-        usbEndpoint = null
+        usbEndpointOut = null
         usbManager = null
         usbDevice = null
         usbInterface = null
@@ -137,7 +225,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     private fun sendCommand(command: String): Boolean = usbConnection?.let { connection ->
         runCatching {
             val data = command.toByteArray(StandardCharsets.UTF_8)
-            connection.bulkTransfer(usbEndpoint, data, data.size, TIMEOUT) >= 0
+            connection.bulkTransfer(usbEndpointOut, data, data.size, TIMEOUT) >= 0
         }.getOrElse {
             LogUtils.e(TAG, "Failed to send command: $command", it)
             false
@@ -145,6 +233,27 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     } ?: false
 
     private fun printerBitmap(bitmap: Bitmap): Int = runCatching {
+        val status = checkPrinterStatus()
+        //            if (statusBytes[0] == 1.toByte()) "缺纸" else "",
+        //            if (statusBytes[1] == 1.toByte()) "面盖打开错误" else "",
+        //            if (statusBytes[2] == 1.toByte()) "切刀错误" else "",
+        //            if (statusBytes[3] == 1.toByte()) "黑标或孔洞定位错误" else "",
+        //            "", // byteArray[4] is undefined
+        //            if (statusBytes[5] == 1.toByte()) "纸将尽" else "",
+        //            if (statusBytes[6] == 1.toByte()) "错误(出纸嘴有纸)" else "",
+        //            if (statusBytes[7] == 1.toByte()) "打印中" else ""
+        when {
+            status[0] == "缺纸" -> {
+                return@runCatching QUEZHI
+            }
+            status[3] == "黑标或孔洞定位错误" -> {
+                return@runCatching MEIHEIBIAO
+            }
+            status[5] == "纸将尽" -> {
+                return@runCatching MEIZHILE
+            }
+        }
+
         Log.d(TAG, "Printing bitmap, size=${bitmap.byteCount / 1024.0f}KB")
         sendCommand("SIZE ${config.width} mm,${config.height} mm\r\n")
         sendPaperTypeCommand()
@@ -152,12 +261,11 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         sendBitmap(0, 0, bitmap)
         sendCommand("PRINT 1\r\n")
         Log.d(TAG, "Print completed")
-        0
+        OK
     }.getOrElse {
         Log.e(TAG, "Print failed", it)
-        -1
+        ERROR
     }
-
     private fun sendPaperTypeCommand() {
         when (config.paperType) {
             PAPER_TYPE_CAP -> sendCommand("GAP ${config.margin} mm,0\r\n")
@@ -201,7 +309,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         while (offset < data.size) {
             val chunkSize = min(MAX_USBFS_BUFFER_SIZE, data.size - offset)
             val chunk = data.copyOfRange(offset, offset + chunkSize)
-            usbConnection?.bulkTransfer(usbEndpoint, chunk, chunk.size, TIMEOUT)
+            usbConnection?.bulkTransfer(usbEndpointOut, chunk, chunk.size, TIMEOUT)
             offset += chunkSize
             Log.d(TAG, "sendLargeData:  offset=${offset}")
         }
@@ -210,7 +318,12 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
 
     private fun Int.toPix(): Int = this * DPI
 
-    override fun OpenDevice(deviceId: Int, deviceFile: String?, port: String?, param: String?): Int = 0
+    override fun OpenDevice(
+        deviceId: Int,
+        deviceFile: String?,
+        port: String?,
+        param: String?
+    ): Int = 0
 
     override fun CloseDevice(deviceId: Int): Int {
         bitmapPrinter?.recycle()
@@ -218,7 +331,9 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         return 0
     }
 
-    override fun getStatus(): Int = 0
+    override fun getStatus(): Int {
+        return 0
+    }
 
     override fun setPageSize(format: Bundle?): Int {
         format ?: return -1
@@ -228,7 +343,10 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
             val direction = getInt("direction")
             val offsetX = getInt("OffsetX")
             val offsetY = getInt("OffsetY")
-            Log.d(TAG, "setPageSize: pageW=${pageWidth},pageH=${pageHeight},direction=${direction},offsetX=${offsetX},offsetY=${offsetY}")
+            Log.d(
+                TAG,
+                "setPageSize: pageW=${pageWidth},pageH=${pageHeight},direction=${direction},offsetX=${offsetX},offsetY=${offsetY}"
+            )
             bitmapPrinter = BitmapPrinterV4(config).apply {
                 setPageSize(
                     pageWidth.toPix(),
@@ -243,7 +361,9 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         }
     }
 
-    override fun startPrintDoc(): Int = 0
+    override fun startPrintDoc(): Int {
+        return 0
+    }
 
     override fun addText(format: Bundle, text: String): Int {
         with(format) {
@@ -253,10 +373,13 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
             val iTop = getInt("iTop")
             val align = getInt("align")
             val pageWidth = getInt("pageWidth")
-            Log.d(TAG, "addText: fontSis=${fontSize},rotation=${rotation},iLeft=${iLeft},iTop=${iTop},align=${align},pageWidth=${pageWidth}")
+            Log.d(
+                TAG,
+                "addText: fontSis=${fontSize},rotation=${rotation},iLeft=${iLeft},iTop=${iTop},align=${align},pageWidth=${pageWidth}"
+            )
             bitmapPrinter?.addText(
                 text,
-                fontSize * PRINT_FONT_SCALE ,
+                fontSize * PRINT_FONT_SCALE,
                 rotation,
                 iLeft.toPix(),
                 iTop.toPix(),

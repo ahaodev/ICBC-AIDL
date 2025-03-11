@@ -3,8 +3,9 @@ package com.icbc
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
-import android.provider.Settings
+import android.os.Build
 import com.blankj.utilcode.util.TimeUtils
+import io.sentry.android.core.BuildConfig
 import io.sentry.android.core.SentryAndroid
 
 
@@ -14,7 +15,8 @@ class App : Application() {
         context = applicationContext
         SentryAndroid.init(context){ config ->
             config.dsn="https://35bad9859153b5a0f1c186d6a9e7b9ef@o4508631282155520.ingest.us.sentry.io/4508922872332288"
-            config.isDebug=false
+            config.isDebug=BuildConfig.DEBUG
+            config.setTag("SN", getSerialNo())
         }
     }
 
@@ -24,11 +26,27 @@ class App : Application() {
             private set
 
     }
+    fun getSerialNo(): String {
+        return if (Build.VERSION.SDK_INT >= 30) {
+            return getSerialNumber()
+        } else {
+            Build.SERIAL
+        }
+    }
 
-}
-fun getAndroidID(): String {
-    val androidID = Settings.Secure.getString(App.context.contentResolver, Settings.Secure.ANDROID_ID)
-    return androidID
+    fun getSerialNumber(): String {
+        return try {
+            val process = Runtime.getRuntime().exec("getprop ro.serialno")
+            val reader = process.inputStream.bufferedReader()
+            val serialNumber = reader.readLine()
+            reader.close()
+            serialNumber
+        } catch (e: Exception) {
+            e.printStackTrace()
+            "null"
+        }
+    }
+
 }
 
 fun today(): String {

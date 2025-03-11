@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_HOT
 import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
 import com.icbc.selfserviceticketing.deviceservice.PRINT_T321OR331
 import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
@@ -45,7 +46,8 @@ fun PrinterConfigPage(
     var expandedTTYSelector by remember { mutableStateOf(false) }
 
     val printerTypeOptions = listOf(PRINT_CSN, PRINT_TSC310E, PRINT_T321OR331)
-    val paperTypeOptions = listOf(PAPER_TYPE_CAP, PAPER_TYPE_BLINE, PAPER_TYPE_BLINEDETECT)
+    val paperTypeOptions = listOf(PAPER_TYPE_CAP, PAPER_TYPE_BLINE, PAPER_TYPE_BLINEDETECT,
+        PAPER_TYPE_HOT)
 
     var currentPaperWidth by remember { mutableStateOf(TextFieldValue(printerConfig.paperWidth)) }
     var currentPaperHeight by remember { mutableStateOf(TextFieldValue(printerConfig.paperHeight)) }

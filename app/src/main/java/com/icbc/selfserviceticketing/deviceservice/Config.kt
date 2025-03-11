@@ -22,6 +22,7 @@ const val PRINT_T321OR331: String = "T3-321/331"
 const val PAPER_TYPE_CAP = "铜版纸"
 const val PAPER_TYPE_BLINE = "黑标纸"
 const val PAPER_TYPE_BLINEDETECT = "连续纸"
+const val PAPER_TYPE_HOT = "热敏纸"
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 

@@ -24,6 +24,7 @@ import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_CAP
+import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_HOT
 import com.icbc.selfserviceticketing.deviceservice.printer.Constants.ERROR
 import com.icbc.selfserviceticketing.deviceservice.printer.Constants.MEIHEIBIAO
 import com.icbc.selfserviceticketing.deviceservice.printer.Constants.MEIZHILE
@@ -258,6 +259,10 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         sendCommand("SIZE ${config.width} mm,${config.height} mm\r\n")
         sendPaperTypeCommand()
         sendCommand("CLS\r\n")
+        if (config.printerType == PAPER_TYPE_HOT) {
+            sendCommand("DIRECTION 0,0\r\n")
+            sendCommand("REFERENCE 0,0\r\n")
+        }
         sendBitmap(0, 0, bitmap)
         sendCommand("PRINT 1\r\n")
         Log.d(TAG, "Print completed")
@@ -311,7 +316,6 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
             val chunk = data.copyOfRange(offset, offset + chunkSize)
             usbConnection?.bulkTransfer(usbEndpointOut, chunk, chunk.size, TIMEOUT)
             offset += chunkSize
-            Log.d(TAG, "sendLargeData:  offset=${offset}")
         }
         Log.d(TAG, "sendLargeData: END")
     }

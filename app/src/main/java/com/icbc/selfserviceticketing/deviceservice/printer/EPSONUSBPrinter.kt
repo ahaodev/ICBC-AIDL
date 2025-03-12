@@ -247,9 +247,11 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
             status[0] == "缺纸" -> {
                 return@runCatching QUEZHI
             }
+
             status[3] == "黑标或孔洞定位错误" -> {
                 return@runCatching MEIHEIBIAO
             }
+
             status[5] == "纸将尽" -> {
                 return@runCatching MEIZHILE
             }
@@ -271,6 +273,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         Log.e(TAG, "Print failed", it)
         ERROR
     }
+
     private fun sendPaperTypeCommand() {
         when (config.paperType) {
             PAPER_TYPE_CAP -> sendCommand("GAP ${config.margin} mm,0\r\n")
@@ -423,5 +426,10 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
                 bitmapPrinter = null
             }
         } ?: return -1
+    }
+
+    override fun selfTest(): Int {
+        sendCommand("SELFTEST\r\n")
+        return 0
     }
 }

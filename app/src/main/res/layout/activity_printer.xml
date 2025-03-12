@@ -24,4 +24,13 @@
         app:layout_constraintEnd_toEndOf="@+id/btnPrinter"
         app:layout_constraintStart_toStartOf="@+id/btnPrinter"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/selfTestButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="打印自检页"
+        app:layout_constraintBottom_toTopOf="@+id/btnPrinter"
+        app:layout_constraintEnd_toEndOf="@+id/btnPrinter"
+        app:layout_constraintStart_toStartOf="@+id/btnPrinter" />
 </androidx.constraintlayout.widget.ConstraintLayout>

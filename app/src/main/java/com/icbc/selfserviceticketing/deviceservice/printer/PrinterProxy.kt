@@ -103,4 +103,7 @@ class PrinterProxy(var context: Context, val config: Config) : IPrinter.Stub() {
         LogUtils.file("endPrintDoc")
         return mProxyPrinter!!.endPrintDoc()
     }
+    fun selfTest(): Int {
+        return mProxyPrinter!!.selfTest()
+    }
 }

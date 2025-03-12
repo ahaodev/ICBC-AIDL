@@ -95,4 +95,5 @@ interface IProxyPrinter {
      */
     int endPrintDoc(); //结束打印任务
 
+    int selfTest(); //自检
 }

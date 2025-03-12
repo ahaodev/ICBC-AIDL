@@ -163,10 +163,7 @@ fun APP(name: String, modifier: Modifier = Modifier) {
                             Text(text = "扫码测试")
                         }
                         Button(onClick = {
-                            PrinterTestActivity.start(
-                                context,
-                                config.printerType
-                            )
+                            PrinterTestActivity.start(context)
                         }) {
                             Text(text = "打印测试")
                         }

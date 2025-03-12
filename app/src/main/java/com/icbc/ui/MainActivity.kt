@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
         binding.btnPrinter.setOnClickListener {
-            PrinterTestActivity.start(this, config.printerType)
+            PrinterTestActivity.start(this)
         }
         binding.cbEnableScannerTTY.setOnCheckedChangeListener{v,b->
             config.enableScannerSuperLeadSerialPortMode  = b

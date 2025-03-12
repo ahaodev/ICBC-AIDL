@@ -23,6 +23,8 @@ import com.icbc.selfserviceticketing.deviceservice.PRINT_CSN
 import com.icbc.selfserviceticketing.deviceservice.PRINT_T321OR331
 import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.R
+import com.icbc.selfserviceticketing.deviceservice.printer.EPSONUSBPrinter
+import com.icbc.selfserviceticketing.deviceservice.printer.PrinterProxy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -49,15 +51,10 @@ class PrinterTestActivity : AppCompatActivity() {
     }
 
     companion object {
-        fun start(context: Context, type: String = PRINT_CSN) {
+        fun start(context: Context) {
             val intent = Intent(context, PrinterTestActivity::class.java)
-            intent.putExtra("type", type) // 传递字符串
             context.startActivity(intent)
         }
-    }
-
-    private fun getType(): String {
-        return intent.getStringExtra("type") ?: PRINT_CSN // 0 是默认值
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -72,12 +69,25 @@ class PrinterTestActivity : AppCompatActivity() {
                 printer()
             }
         }
-        findViewById<TextView>(R.id.tvPrinterType).text = getType()
+
+        findViewById<Button>(R.id.selfTestButton).setOnClickListener {
+            iPrinter?.let {
+                try {
+                    if (iPrinter is PrinterProxy) {
+                        (iPrinter as PrinterProxy).selfTest()
+                    }
+                    ToastUtils.showLong("自检中")
+                } catch (e: RemoteException) {
+                    e.printStackTrace()
+                }
+            }
+        }
         lifecycleScope.launch {
             runCatching {
                 val storeConfig = ConfigProvider.readConfig(applicationContext).firstOrNull()
                 storeConfig?.let {
                     config = storeConfig
+                    findViewById<TextView>(R.id.tvPrinterType).text = storeConfig.toString()
                 }
             }
         }
@@ -85,7 +95,7 @@ class PrinterTestActivity : AppCompatActivity() {
 
     private fun printer() {
         try {
-            when (getType()) {
+            when (config.printerType) {
                 PRINT_TSC310E -> {
                     val status = printTSC(iPrinter!!)
                     LogUtils.d("Status =${status}")

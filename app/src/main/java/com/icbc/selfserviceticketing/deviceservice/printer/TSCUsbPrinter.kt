@@ -17,6 +17,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.Log
 import com.blankj.utilcode.util.LogUtils
+import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINE
 import com.icbc.selfserviceticketing.deviceservice.PAPER_TYPE_BLINEDETECT
@@ -525,5 +526,10 @@ class TSCUsbPrinter(private val context: Context,val config: Config) : IProxyPri
         bitmapPrinter == null
         LogUtils.file("endPrintDoc----------------------------")
         return status
+    }
+
+    override fun selfTest(): Int {
+        sendCommand("SELFTEST\r\n")
+        return 0
     }
 }

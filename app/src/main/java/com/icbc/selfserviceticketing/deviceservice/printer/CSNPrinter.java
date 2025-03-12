@@ -253,6 +253,11 @@ public class CSNPrinter implements CSNIOCallBack, IProxyPrinter {
     }
 
     @Override
+    public int selfTest() {
+        return 0;
+    }
+
+    @Override
     public void OnOpen() {
         printerStatus = 0;
         Log.d(TAG, "OnOpen: " + printerStatus);

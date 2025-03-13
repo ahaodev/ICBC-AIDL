@@ -25,6 +25,7 @@ data class PrinterConfigUIState(
     val paperPadding: String = "0",
     val rotationAngle: String = "0",
     val printerTTY: String = "ttyS0",
+    val enableCutter :Boolean = false,
     val enableBorder: Boolean = false,
 )
 

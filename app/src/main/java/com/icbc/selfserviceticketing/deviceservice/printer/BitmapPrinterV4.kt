@@ -19,6 +19,8 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.icbc.selfserviceticketing.deviceservice.Config
 import java.util.EnumMap
 import kotlin.math.roundToInt
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.set
 
 /**
 openDevice: device =  VID:0FE6 PID:811EVendorId=4070ProductId=33054
@@ -225,10 +227,10 @@ class BitmapPrinterV4(val config: Config) {
             val matrix = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, size, size, hints)
             val height = matrix.height
             val width = matrix.width
-            qrImage = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+            qrImage = createBitmap(width, height, Bitmap.Config.RGB_565)
             for (x in 0 until width) {
                 for (y in 0 until height) {
-                    qrImage.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)
+                    qrImage[x, y] = if (matrix[x, y]) Color.BLACK else Color.WHITE
                 }
             }
         } catch (e: WriterException) {
@@ -242,7 +244,7 @@ class BitmapPrinterV4(val config: Config) {
     private fun basicBitmap(width: Int, height: Int): Pair<Bitmap, Canvas> {
         Log.d(TAG, "basicBitmap: width=$width height=$height")
         LogUtils.file("width=${width},height=${height}")
-        val printerBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
+        val printerBitmap = createBitmap(width, height, Bitmap.Config.RGB_565)
         val canvas = Canvas(printerBitmap)
         canvas.drawColor(Color.WHITE)
         return Pair(printerBitmap, canvas)

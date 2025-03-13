@@ -70,6 +70,7 @@ fun PrinterConfigPage(
         paperHeight: String = currentPaperHeight.text,
         paperPadding: String = currentPaperPadding.text,
         rotationAngle: String = currentPaperAngle.text,
+        enableCutter: Boolean = printerConfig.enableCutter,
         enableBorder: Boolean = printerConfig.enableBorder
     ) {
         onConfigChange(
@@ -81,6 +82,7 @@ fun PrinterConfigPage(
                 paperHeight = paperHeight,
                 paperPadding = paperPadding,
                 rotationAngle = rotationAngle,
+                enableCutter = enableCutter,
                 enableBorder = enableBorder
             )
         )
@@ -223,7 +225,18 @@ fun PrinterConfigPage(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
             }
-
+            if (printerConfig.printType== PRINT_T321OR331&&printerConfig.paperType== PAPER_TYPE_HOT) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("开启切刀(T321/T331 热敏)")
+                    Checkbox(
+                        checked = printerConfig.enableCutter,
+                        onCheckedChange = { handleConfigChange(enableCutter = it) }
+                    )
+                }
+            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(8.dp)

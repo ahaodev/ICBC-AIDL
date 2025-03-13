@@ -63,7 +63,7 @@ class PrinterProxy(var context: Context, val config: Config) : IPrinter.Stub() {
     @Throws(RemoteException::class)
     override fun getStatus(): Int {
         LogUtils.file("deviceId=${mProxyPrinter!!.status}")
-        Log.d(TAG, "getStatus: --------")
+        Log.d(TAG, "getStatus: -----${mProxyPrinter!!.status}---")
         return mProxyPrinter!!.status
     }
 

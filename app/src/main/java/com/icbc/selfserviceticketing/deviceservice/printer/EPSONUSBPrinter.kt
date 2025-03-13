@@ -13,11 +13,8 @@ import android.hardware.usb.UsbEndpoint
 import android.hardware.usb.UsbInterface
 import android.hardware.usb.UsbManager
 import android.os.Bundle
-import android.os.Handler
 import android.util.Log
 import androidx.core.content.ContextCompat
-import com.blankj.utilcode.util.ActivityUtils
-import com.blankj.utilcode.util.ActivityUtils.startActivity
 import com.blankj.utilcode.util.LogUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
@@ -30,11 +27,9 @@ import com.icbc.selfserviceticketing.deviceservice.printer.Constants.MEIHEIBIAO
 import com.icbc.selfserviceticketing.deviceservice.printer.Constants.MEIZHILE
 import com.icbc.selfserviceticketing.deviceservice.printer.Constants.OK
 import com.icbc.selfserviceticketing.deviceservice.printer.Constants.QUEZHI
-import com.icbc.ui.compose.MainActivity
-import com.lxj.xpopup.XPopup
-import com.lxj.xpopup.util.XPermission
 import java.nio.charset.StandardCharsets
 import kotlin.math.min
+import androidx.core.graphics.get
 
 
 /**
@@ -64,7 +59,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     private var hasPermission = false
     private var pageWidth = 0
     private var pageHeight = 0
-
+    private var usbStatus = 0 // 0:正常 1:错误
     private val usbReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             if (ACTION_USB_PERMISSION == intent.action) {
@@ -81,9 +76,10 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
 
     init {
         initialize()
-        val openPortStatus = connectUsbPrinter()
-        if (openPortStatus != 0) {
+        usbStatus = connectUsbPrinter()
+        if (usbStatus != 0) {
             LogUtils.e(TAG, "Failed to open port")
+            ToastUtils.showLong("Failed to open port")
         }
     }
 
@@ -224,6 +220,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     }
 
     private fun sendCommand(command: String): Boolean = usbConnection?.let { connection ->
+        Log.d(TAG, "> $command")
         runCatching {
             val data = command.toByteArray(StandardCharsets.UTF_8)
             connection.bulkTransfer(usbEndpointOut, data, data.size, TIMEOUT) >= 0
@@ -267,6 +264,10 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
         }
         sendBitmap(0, 0, bitmap)
         sendCommand("PRINT 1\r\n")
+        if (config.enableCutter){
+            sendCommand("FEED 20\r\n")
+            sendCommand("CUT\r\n")
+        }
         Log.d(TAG, "Print completed")
         OK
     }.getOrElse {
@@ -298,7 +299,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
 
         for (y in 0 until bitmap.height) {
             for (x in 0 until bitmap.width) {
-                val gray = Color.red(bitmap.getPixel(x, y)) // Assuming monochrome
+                val gray = Color.red(bitmap[x, y]) // Assuming monochrome
                 if (gray == 0) {
                     val index = y * widthBytes + x / 8
                     val bitPosition = 128 shr (x % 8)
@@ -339,7 +340,7 @@ class EPSONUSBPrinter(private val context: Context, private val config: Config) 
     }
 
     override fun getStatus(): Int {
-        return 0
+        return usbStatus
     }
 
     override fun setPageSize(format: Bundle?): Int {

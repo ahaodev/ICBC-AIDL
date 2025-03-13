@@ -18,6 +18,7 @@ object ConfigConverter {
                 rotationAngle = config.rotation.toString(),
                 printerTTY = config.csnDevPort,
                 enableBorder = config.enableBorder,
+                enableCutter = config.enableCutter,
             ),
             scanner = ScannerConfigUIState(
                 scannerType = when (config.scannerType) {
@@ -57,6 +58,7 @@ object ConfigConverter {
             margin = margin,
             width = width,
             height = height,
+            enableCutter = uiState.printer.enableCutter,
             enableBorder = uiState.printer.enableBorder,
             csnDevPort = uiState.scanner.serialPort,
             enableScannerSuperLeadSerialPortMode = uiState.scanner.enableScannerSuperLeadSerialPortMode

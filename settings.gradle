@@ -11,6 +11,14 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url 'https://jitpack.io' }
+//        maven {
+//            url "http://192.168.8.6:55381/repository/maven-releases/"
+//            allowInsecureProtocol = true
+////            credentials {
+////                username = "你的用户名" // 比如 "admin"
+////                password = "你的密码"   // 比如 "password123"
+////            }
+//        }
     }
 }
 rootProject.name = "ICBCAIDL"

@@ -24,8 +24,12 @@ public class DeviceInfo extends IDeviceInfo.Stub {
     public String getSerialNo() throws RemoteException {
         //1Y42336003934170 陈汉
 //        return Build.SERIAL;
-        //return SystemUtil.INSTANCE.getSN();
-        return "1Y42320003003657";
+        String sn = SystemUtil.INSTANCE.getSN();
+        if (sn !=null && sn.length()>18){
+            sn = sn.substring(0,18); // 截取最后18位
+        }
+        return sn;
+//        return "1Y42320003003657";
     }
 
     @Override

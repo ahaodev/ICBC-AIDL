@@ -16,8 +16,8 @@ steps:
     image: gradle:8.9-jdk17
     environment:
       ANDROID_SDK_ROOT: /opt/android-sdk-linux
-      BUILD_TOOLS_VERSION: 35.0.0
-      PLATFORM_VERSION: android-35
+      BUILD_TOOLS_VERSION: 34.0.0
+      PLATFORM_VERSION: android-34
     volumes:
       - name: android-sdk
         path: /opt/android-sdk-linux

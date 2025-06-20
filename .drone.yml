@@ -13,7 +13,8 @@ trigger:
       - build.gradle
 steps:
   - name: build
-    image: gradle:8.9-jdk17
+    image: gradle:8.11.1-jdk17
+    mem_limit: 8g
     environment:
       ANDROID_SDK_ROOT: /opt/android-sdk-linux
       BUILD_TOOLS_VERSION: 35.0.0
@@ -77,4 +78,4 @@ volumes:
       path: /mnt/user/appdata/drone/tools/android-sdk
   - name: gradle-cache
     host:
-      path: /mnt/user/appdata/drone/cache/gradle-8.9-jdk17
+      path: /mnt/user/appdata/drone/cache/gradle-8.11.1-jdk17

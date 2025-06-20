@@ -46,7 +46,7 @@ steps:
 volumes:
   - name: sdk
     host:
-      path: /mnt/user/appdata/drone/tools/android/sdk
+      path: /mnt/user/appdata/drone/android-sdk
   - name: gradle-cache
     host:
       path: /mnt/user/appdata/drone/tools/gradle/cache-icbc-aidl

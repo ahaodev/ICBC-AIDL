@@ -13,15 +13,35 @@ trigger:
       - build.gradle
 steps:
   - name: build
-    image: gradle:8.9
+    image: gradle:8.9-jdk17
+    environment:
+      ANDROID_SDK_ROOT: /opt/android-sdk-linux
+      BUILD_TOOLS_VERSION: 34.0.0
+      PLATFORM_VERSION: android-34
     volumes:
-      - name: sdk
-        path: /drone/src/sdk
+      - name: android-sdk
+        path: /opt/android-sdk-linux
       - name: gradle-cache
         path: /home/gradle/.gradle
-    environment:
-      ANDROID_HOME: /drone/src/sdk
     commands:
+      # 检查 cmdline-tools 是否已存在
+      - if [ ! -d "$ANDROID_SDK_ROOT/cmdline-tools/latest" ]; then
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools &&
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip &&
+        unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools &&
+        mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest;
+        fi
+      - export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+
+      # 检查并接受 SDK 许可证（仅在未接受时执行）
+      - if [ ! -f "$ANDROID_SDK_ROOT/licenses/android-sdk-license" ]; then yes | sdkmanager --licenses; fi
+
+      # 检查并安装缺失的构建工具和平台（仅在未安装时执行）
+      - if ! sdkmanager --list | grep -q "build-tools;$BUILD_TOOLS_VERSION"; then sdkmanager "build-tools;$BUILD_TOOLS_VERSION"; fi
+      - if ! sdkmanager --list | grep -q "platforms;$PLATFORM_VERSION"; then sdkmanager "platforms;$PLATFORM_VERSION"; fi
+
+      # 验证 Java 版本
+      - java -version
       - echo ${DRONE_SOURCE_BRANCH}
       - chmod +x gradlew
       - ./gradlew assembleDebug --stacktrace
@@ -46,7 +66,7 @@ steps:
 volumes:
   - name: sdk
     host:
-      path: /mnt/user/appdata/drone/android-sdk
+      path: /mnt/user/appdata/drone/tools/android-sdk
   - name: gradle-cache
     host:
-      path: /mnt/user/appdata/drone/tools/gradle/cache-icbc-aidl
+      path: /mnt/user/appdata/drone/cache/gradle-8.9-jdk17

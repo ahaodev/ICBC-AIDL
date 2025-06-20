@@ -13,7 +13,7 @@ trigger:
       - build.gradle
 steps:
   - name: build
-    image: gradle:8.11.1-jdk17
+    image: gradle:8.9-jdk17
     environment:
       ANDROID_SDK_ROOT: /opt/android-sdk-linux
       BUILD_TOOLS_VERSION: 35.0.0

@@ -38,7 +38,7 @@ steps:
 
       # 检查并接受 SDK 许可证（仅在未接受时执行）
       - if [ ! -f "$ANDROID_SDK_ROOT/licenses/android-sdk-license" ]; then yes | sdkmanager --licenses; fi
-
+      - chmod +x $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
       # 检查并安装缺失的构建工具和平台（仅在未安装时执行）
       - if ! sdkmanager --list | grep -q "build-tools;$BUILD_TOOLS_VERSION"; then sdkmanager "build-tools;$BUILD_TOOLS_VERSION"; fi
       - if ! sdkmanager --list | grep -q "platforms;$PLATFORM_VERSION"; then sdkmanager "platforms;$PLATFORM_VERSION"; fi

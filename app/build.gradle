@@ -30,7 +30,7 @@ android {
     defaultConfig {
         applicationId "com.icbc.selfserviceticketing.deviceservice"
         //25 7.1
-        compileSdk 35
+        compileSdk 34
         minSdk 25
         targetSdk 25
         versionCode generateVersionCode(versionProps['versionCode'].toInteger())

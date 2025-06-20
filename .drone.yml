@@ -63,10 +63,10 @@ steps:
       SECRET_KEY:
         from_secret: MINIO_SECRET_KEY
     commands:
-
       - mc config host add mio $ADDRESS $ACCESS_KEY $SECRET_KEY
       - mc ls mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}
-      - mc stat "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}" > /dev/null 2>&1 || mc mb "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}"
+#      - mc stat "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}" > /dev/null 2>&1 || mc mb "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}"
+      - mc mkdir --ignore-existing "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}"
       - mc cp app/build/outputs/apk/debug/*.apk "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}"
 
 volumes:

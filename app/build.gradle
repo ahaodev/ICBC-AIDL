@@ -6,6 +6,21 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.compose'
     id "io.sentry.android.gradle" version "5.3.0"
 }
+def generateVersionCode = { versionCode ->
+    def commitCount = 0
+    try {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            // git rev-list --reverse HEAD | Select-Object -Skip <count> -First 1
+            commandLine 'git', 'rev-list', '--count', 'HEAD'
+            standardOutput = stdout
+        }
+        commitCount = stdout.toString().trim().toInteger()
+    } catch (Exception e) {
+        e.printStackTrace()
+    }
+    return versionCode + commitCount
+}
 
 android {
     def versionPropsFile = file('../version.properties')
@@ -18,7 +33,7 @@ android {
         compileSdk 35
         minSdk 25
         targetSdk 25
-        versionCode versionProps['versionCode'].toInteger()
+        versionCode generateVersionCode(versionProps['versionCode'].toInteger())
         versionName versionProps['versionName']
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -73,12 +88,10 @@ android {
     }
     applicationVariants.all { variant ->
         variant.outputs.all {
-            def time = new Date().format("yyyyMMddHHmm", TimeZone.getTimeZone("GMT+08:00"))
+            def time = new Date().format("yyMMdd", TimeZone.getTimeZone("GMT+08:00"))
             def buildTypes = variant.buildType.name
-            def versionName = variant.versionName
-            def variantName = variant.name
-            def apkName ="AIDL-${versionName}-${time}.apk".replace("_Debug","")
-            outputFileName =apkName
+            def apkName = "AIDL-${versionName}-${time}${variant.versionCode}.apk".replace("_Debug", "")
+            outputFileName = apkName
             //产品名称-产品类型-构建类型-版本号-打包时间-后缀名
             print(outputFileName)
         }
@@ -129,6 +142,6 @@ dependencies {
     androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
-    compileOnly( 'io.sentry:sentry-android:8.3.0')
-    compileOnly( 'org.slf4j:slf4j-nop:1.7.25')
+    compileOnly('io.sentry:sentry-android:8.3.0')
+    compileOnly('org.slf4j:slf4j-nop:1.7.25')
 }

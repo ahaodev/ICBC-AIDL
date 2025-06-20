@@ -72,7 +72,7 @@ steps:
       - mc cp app/build/outputs/apk/debug/*.apk "$dir"
 
 volumes:
-  - name: sdk
+  - name: android-sdk
     host:
       path: /mnt/user/appdata/drone/tools/android-sdk
   - name: gradle-cache

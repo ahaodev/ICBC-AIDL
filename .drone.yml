@@ -65,8 +65,8 @@ steps:
     commands:
       - mc config host add mio $ADDRESS $ACCESS_KEY $SECRET_KEY
       - dir="mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}"
-      - echo $dir
-      - mc ls $dir
+      - echo "$dir"
+      - mc ls "$dir"
 #      - mc stat "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}" > /dev/null 2>&1 || mc mb "mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}"
       - mc mkdir --ignore-existing "$dir"
       - mc cp app/build/outputs/apk/debug/*.apk "$dir"

@@ -70,6 +70,7 @@ steps:
       - mc ls mio/uchi/AIDL/$VERSION_NAME
       - mc stat "mio/uchi/AIDL/${VERSION_NAME}" > /dev/null 2>&1 || mc mb "mio/uchi/AIDL/${VERSION_NAME}"
       - mc cp app/build/outputs/apk/debug/*.apk "mio/uchi/AIDL/${VERSION_NAME}"
+
 volumes:
   - name: sdk
     host:

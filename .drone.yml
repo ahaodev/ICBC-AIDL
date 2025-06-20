@@ -41,7 +41,7 @@ steps:
 
       # 赋予 sdkmanager 执行权限
       - chmod +x $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
-      - chmod +x /opt/android-sdk-linux/build-tools/$BUILD_TOOLS_VERSION/aidl
+      - chmod +x $ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION/aidl
 
       # 检查并安装缺失的构建工具和平台（仅在未安装时执行）
       - if ! sdkmanager --list | grep -q "build-tools;$BUILD_TOOLS_VERSION"; then sdkmanager "build-tools;$BUILD_TOOLS_VERSION"; fi

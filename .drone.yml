@@ -13,11 +13,11 @@ trigger:
       - build.gradle
 steps:
   - name: build
-    image: gradle:8.9-jdk17
+    image: gradle:8.11.1-jdk17
     environment:
       ANDROID_SDK_ROOT: /opt/android-sdk-linux
-      BUILD_TOOLS_VERSION: 34.0.0
-      PLATFORM_VERSION: android-34
+      BUILD_TOOLS_VERSION: 35.0.0
+      PLATFORM_VERSION: android-35
     volumes:
       - name: android-sdk
         path: /opt/android-sdk-linux
@@ -27,10 +27,12 @@ steps:
       # 检查 cmdline-tools 是否已存在
       - if [ ! -d "$ANDROID_SDK_ROOT/cmdline-tools/latest" ]; then
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools &&
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip &&
+        wget https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdline-tools.zip &&
         unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools &&
         mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest;
         fi
+
+      # 更新 PATH 环境变量以包含 cmdline-tools
       - export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
 
       # 检查并接受 SDK 许可证（仅在未接受时执行）
@@ -42,10 +44,16 @@ steps:
 
       # 验证 Java 版本
       - java -version
-      - echo ${DRONE_SOURCE_BRANCH}
-      - chmod +x gradlew
-      - ./gradlew assembleDebug --stacktrace
-#      - ./gradlew assemble --stacktrace
+
+      # 赋予 Gradle 脚本执行权限
+      - chmod +x ./gradlew
+
+      # 构建项目
+      - ./gradlew assembleDebug
+
+      # 查看生成的 APK 文件
+      - ls -l app/build/outputs/apk/debug/
+
   - name: upload
     image: minio/mc:RELEASE.2024-01-16T16-06-34Z
     environment:

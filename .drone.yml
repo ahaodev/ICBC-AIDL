@@ -13,7 +13,8 @@ trigger:
       - build.gradle
 steps:
   - name: build
-    image: gradle:8.9-jdk17
+    image: gradle:8.11.1-jdk17
+    mem_limit: 8g
     environment:
       ANDROID_SDK_ROOT: /opt/android-sdk-linux
       BUILD_TOOLS_VERSION: 35.0.0
@@ -37,6 +38,10 @@ steps:
 
       # 检查并接受 SDK 许可证（仅在未接受时执行）
       - if [ ! -f "$ANDROID_SDK_ROOT/licenses/android-sdk-license" ]; then yes | sdkmanager --licenses; fi
+
+      # 赋予 sdkmanager 执行权限
+      - chmod +x $ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager
+      - chmod +x $ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION/aidl
 
       # 检查并安装缺失的构建工具和平台（仅在未安装时执行）
       - if ! sdkmanager --list | grep -q "build-tools;$BUILD_TOOLS_VERSION"; then sdkmanager "build-tools;$BUILD_TOOLS_VERSION"; fi
@@ -63,18 +68,15 @@ steps:
       SECRET_KEY:
         from_secret: MINIO_SECRET_KEY
     commands:
-      - VERSION_NAME=$(cut -d'=' -f2 version.properties)
-      - echo "$VERSION_NAME"
       - mc config host add mio $ADDRESS $ACCESS_KEY $SECRET_KEY
-      # 判断分支名称，根据不同的分支名称选择不同的目录
-      - mc ls mio/uchi/AIDL/$VERSION_NAME
-      - mc stat "mio/uchi/AIDL/${VERSION_NAME}" > /dev/null 2>&1 || mc mb "mio/uchi/AIDL/${VERSION_NAME}"
-      - mc cp app/build/outputs/apk/debug/*.apk "mio/uchi/AIDL/${VERSION_NAME}"
+      - dir="mio/uchi/AIDL/${DRONE_SOURCE_BRANCH}"
+      - mc stat "$dir" > /dev/null 2>&1 || mc mb "$dir"
+      - mc cp app/build/outputs/apk/debug/*.apk "$dir"
 
 volumes:
-  - name: sdk
+  - name: android-sdk
     host:
       path: /mnt/user/appdata/drone/tools/android-sdk
   - name: gradle-cache
     host:
-      path: /mnt/user/appdata/drone/cache/gradle-8.9-jdk17
+      path: /mnt/user/appdata/drone/cache/gradle-8.11.1-jdk17

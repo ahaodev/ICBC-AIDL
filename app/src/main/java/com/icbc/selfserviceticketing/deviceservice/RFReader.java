@@ -146,8 +146,8 @@ public class RFReader extends IRFReader.Stub {
     }
 
     private class ISerialPortTask extends Thread {
-        private static final String DEV_PORT = "/dev/ttyS3";
-        private static final int DEV_BAUDRATE = 9600;
+        private static final String DEV_PORT = "/dev/ttyS2";
+        private static final int DEV_BAUDRATE = 115200;
         private SerialPort mSerialPort;
         private boolean bStart = true;
         private NonContactDeviceListener mDeviceListener;

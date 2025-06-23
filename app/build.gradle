@@ -9,14 +9,14 @@ plugins {
 
 android {
     def versionPropsFile = file('../version.properties')
-    def Properties versionProps = new Properties()
+    Properties versionProps = new Properties()
     versionProps.load(new FileInputStream(versionPropsFile))
     namespace 'com.icbc.selfserviceticketing.deviceservice'
     defaultConfig {
         applicationId "com.icbc.selfserviceticketing.deviceservice"
-        //25 7.1
         compileSdk 35
         minSdk 25
+        //noinspection ExpiredTargetSdkVersion
         targetSdk 25
         versionCode versionProps['versionCode'].toInteger()
         versionName versionProps['versionName']

@@ -53,6 +53,7 @@
         <activity android:name="com.icbc.ui.IDCardTestActivity" />
         <activity android:name="com.icbc.ui.ScannerTestActivity" />
         <activity android:name="com.icbc.ui.PrinterTestActivity" />
+        <activity android:name="com.icbc.ui.RFTestActivity" />
 
         <service
             android:name=".DeviceService"

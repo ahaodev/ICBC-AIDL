@@ -1,11 +1,11 @@
 package com.icbc.ui.compose
 
 import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,11 +36,11 @@ import com.blankj.utilcode.util.LogUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.Config
 import com.icbc.selfserviceticketing.deviceservice.ConfigProvider
-import com.icbc.selfserviceticketing.deviceservice.PRINT_TSC310E
 import com.icbc.selfserviceticketing.deviceservice.printer.QRCodeUtils
 import com.icbc.selfserviceticketing.deviceservice.utils.LogUtilsUpload
 import com.icbc.ui.IDCardTestActivity
 import com.icbc.ui.PrinterTestActivity
+import com.icbc.ui.RFTestActivity
 import com.icbc.ui.ScannerTestActivity
 import com.icbc.ui.compose.ui.theme.ICBCAIDLTheme
 import com.lxj.xpopup.XPopup
@@ -58,10 +58,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ICBCAIDLTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    APP(
-                        name = "ICBC-AIDL",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    APP(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -71,7 +68,7 @@ class MainActivity : ComponentActivity() {
 private val qrCodeUtils = QRCodeUtils()
 
 @Composable
-fun APP(name: String, modifier: Modifier = Modifier) {
+fun APP(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
     var sn by remember { mutableStateOf("NULL") }
@@ -103,7 +100,7 @@ fun APP(name: String, modifier: Modifier = Modifier) {
                     sbf.append("上传日志\n $it")
                 }
             }
-            with(Dispatchers.Main){
+            with(Dispatchers.Main) {
                 XPopup.Builder(context)
                     .asConfirm("已上传", sbf.toString()) {
                     }
@@ -167,6 +164,13 @@ fun APP(name: String, modifier: Modifier = Modifier) {
                         }) {
                             Text(text = "打印测试")
                         }
+                        Button(onClick = {
+                            Intent(context, RFTestActivity::class.java).apply {
+                                context.startActivity(this)
+                            }
+                        }) {
+                            Text(text = "RF测试")
+                        }
                     }
                 }
 
@@ -184,9 +188,9 @@ fun APP(name: String, modifier: Modifier = Modifier) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(start = 8.dp, end = 8.dp), onClick = {
-                    handleSave.invoke()
-                    (context as? Activity)?.finish() // 结束当前 Activity
-                }
+                handleSave.invoke()
+                (context as? Activity)?.finish() // 结束当前 Activity
+            }
         ) {
             Text(text = "保存参数")
         }
@@ -198,6 +202,6 @@ fun APP(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     ICBCAIDLTheme {
-        APP("Android")
+        APP()
     }
 }

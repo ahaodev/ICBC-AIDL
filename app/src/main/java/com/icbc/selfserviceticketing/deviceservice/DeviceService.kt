@@ -7,6 +7,7 @@ import android.os.RemoteException
 import android.util.Log
 import com.blankj.utilcode.util.CrashUtils
 import com.blankj.utilcode.util.LogUtils
+import com.icbc.selfserviceticketing.deviceservice.iccard.ShenShuIC
 import com.icbc.selfserviceticketing.deviceservice.idcard.IDCardProxy
 import com.icbc.selfserviceticketing.deviceservice.printer.PrinterProxy
 import com.icbc.selfserviceticketing.deviceservice.scanner.ScannerSuperLead
@@ -99,7 +100,8 @@ class DeviceService : Service() {
             @Throws(RemoteException::class)
             override fun getRFReader(): IRFReader {
                 LogUtils.file("getRFReader")
-                return RFReader()
+            return  ShenShuIC(cScope =scope)
+            //return RFReader()
             }
 
             @Throws(RemoteException::class)

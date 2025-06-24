@@ -7,6 +7,7 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 
+import com.blankj.utilcode.util.ToastUtils;
 import com.utils.SystemUtil;
 
 import java.text.ParseException;
@@ -22,13 +23,12 @@ public class DeviceInfo extends IDeviceInfo.Stub {
 
     @Override
     public String getSerialNo() throws RemoteException {
-        String sn = Build.SERIAL;
-        if (null == sn || sn.isEmpty()) {
+        String sn = "unknown";
+        sn = Build.SERIAL;
+        if (null == sn || sn.isEmpty()|| sn.equals("unknown")) {
             sn =SystemUtil.INSTANCE.getSN();
         }
-        if (sn !=null && sn.length()>18){
-            sn = sn.substring(0,18); // 截取最后18位
-        }
+        ToastUtils.showLong("设备序列号：" + sn);
         return sn;
     }
 

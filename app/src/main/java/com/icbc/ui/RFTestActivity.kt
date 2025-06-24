@@ -10,6 +10,7 @@ import android.os.RemoteException
 import android.util.Log
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import com.blankj.utilcode.util.LogUtils
 import com.blankj.utilcode.util.ToastUtils
 import com.icbc.selfserviceticketing.deviceservice.DeviceService
 import com.icbc.selfserviceticketing.deviceservice.IDeviceService
@@ -29,7 +30,11 @@ class RFTestActivity : AppCompatActivity() {
                     }
 
                     override fun readCardCallBack(type: String?, data: Bundle?) {
-                        ToastUtils.showLong(type,data.toString())
+                        val carNumber = data?.getString("ICCardContent")
+                        runOnUiThread {
+                            LogUtils.d(carNumber)
+                            editText.setText(carNumber)
+                        }
                     }
 
                 })
@@ -49,7 +54,7 @@ class RFTestActivity : AppCompatActivity() {
             context.startActivity(intent)
         }
     }
-    private val editScanner: EditText by lazy { findViewById(R.id.tvNumber) }
+    private val editText: EditText by lazy { findViewById(R.id.tvNumber) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scanner)

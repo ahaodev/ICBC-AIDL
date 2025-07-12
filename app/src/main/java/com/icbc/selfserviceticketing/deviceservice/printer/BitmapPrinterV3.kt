@@ -157,9 +157,13 @@ class BitmapPrinterV3(val config: Config) {
         textPaint.textSize = fontSize.toFloat()
         textPaint.color = Color.BLACK
         textPaint.style = Paint.Style.FILL
-
+        var autoText = text
+        if (text.contains(";")){
+            autoText= text.replace(";", ";\n")
+        }
+        LogUtils.file(" ; 换行",autoText)
         val staticLayout = StaticLayout.Builder.obtain(
-            text, 0, text.length, textPaint, textWidth
+            autoText, 0, autoText.length, textPaint, textWidth
         )
             .setAlignment(align)
             .build()

@@ -145,8 +145,14 @@ class BitmapPrinterV4(val config: Config) {
     ) {
         Log.d(TAG, "drawText: text=$text x=$x y=$y textWidth=$textWidth rotation=$rotation")
         textPaint.textSize = fontSize
+
+        var autoText = text
+        if (text.contains(";")){
+            autoText= text.replace(";", ";\n")
+        }
+        LogUtils.file(" ; 换行",autoText)
         val staticLayout = StaticLayout.Builder.obtain(
-            text, 0, text.length, textPaint, textWidth
+            autoText, 0, autoText.length, textPaint, textWidth
         )
             .setAlignment(align)
             .build()

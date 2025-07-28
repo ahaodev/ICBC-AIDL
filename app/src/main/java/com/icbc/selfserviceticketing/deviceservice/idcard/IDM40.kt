@@ -6,6 +6,7 @@ import android.hardware.usb.UsbDevice
 import android.hardware.usb.UsbManager
 import android.os.Bundle
 import android.util.Log
+import com.blankj.utilcode.util.LogUtils
 import com.icbc.selfserviceticketing.deviceservice.DeviceListener
 import com.icbc.selfserviceticketing.deviceservice.USBManager.ZKUSBManager
 import com.icbc.selfserviceticketing.deviceservice.USBManager.ZKUSBManagerListener
@@ -19,6 +20,7 @@ import com.zkteco.android.biometric.module.idcard.IDCardReaderFactory
 import com.zkteco.android.biometric.module.idcard.IDCardType
 import com.zkteco.android.biometric.module.idcard.exception.IDCardReaderException
 import com.zkteco.android.biometric.module.idcard.meta.IDCardInfo
+import com.zkteco.android.biometric.module.idcard.meta.IDPRPCardInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -144,6 +146,19 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
                                 it(0, "success", bundle)
                             }
 
+                        }else{//外国的
+                            val idprpCardInfo = idCardReader?.lastPRPIDCardInfo
+                            idprpCardInfo?.let { idcard ->
+                                try {
+                                    val bundle = createOtherBundle(idcard)
+                                    idCall?.let {
+                                        it(0,"success",bundle)
+                                    }
+                                }catch (e: Exception){
+                                    e.printStackTrace()
+                                    LogUtils.file(e)
+                                }
+                            }
                         }
                     }
                 }
@@ -154,7 +169,51 @@ class IDM40(private val context: Context, val cScope: CoroutineScope) : IProxyID
             e.printStackTrace()
         }
     }
+    private fun createOtherBundle(idprpCardInfo: IDPRPCardInfo): Bundle {
+        return with(Bundle()) {
 
+            val country =
+                idprpCardInfo.country + "/" + idprpCardInfo.countryCode //国家/国家地区代码
+            val name = idprpCardInfo.cnName ?: ""
+            val number = idprpCardInfo.id ?: ""
+            val nationality = country
+            val sex = idprpCardInfo.sex ?: ""
+            val birthday = idprpCardInfo.birth ?: ""
+            val address = country
+            val signedDepartment = "公安部"
+            val effectiveDate = idprpCardInfo.validityTime ?: ""
+            val expiryDate = idprpCardInfo.validityTime ?: ""
+            //姓名
+            putString("IDName", name)
+            //身份证号
+            putString("IDNumber", number)
+            //民族
+            //putString("IDNation", idCardInfo.nation)
+            //性别
+            putString("IDSex", sex)
+            //出生日期
+            putString("IDBirthday", idprpCardInfo.birth)
+            //住址
+            putString("IDAddress", idprpCardInfo.country)
+            //签发机关
+            //putString("IDSignedDepartment", idCardInfo.depart)
+            //有效期限
+            val validityTime = idprpCardInfo.validityTime
+            val split =
+                validityTime.split("-".toRegex()).dropLastWhile { it.isEmpty() }
+                    .toTypedArray()
+            putString("IDEffectiveDate", split[0])
+            putString("IDExpiryDate", split[1])
+            if (idprpCardInfo.photolength > 0) {
+                val buf = ByteArray(WLTService.imgLength)
+                if (1 == WLTService.wlt2Bmp(idprpCardInfo.photo, buf)) {
+                    val bitmap = IDPhotoHelper.Bgr2Bitmap(buf)
+                    putParcelable("IDImage", bitmap)
+                }
+            }
+            this
+        }
+    }
     private fun createBundle(idCardInfo: IDCardInfo): Bundle {
         return with(Bundle()) {
             //姓名

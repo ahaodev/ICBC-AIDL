@@ -63,11 +63,13 @@ class ShenShuIC(private val port: String="/dev/ttyS2", private val cScope: Corou
                             delay(400)
                             val size = inputStream.available()
                             if (size > 0) {
-                                val buffer = ByteArray(64)
+                                val buffer = ByteArray(32)
                                 inputStream.read(buffer)
                                 //convert to hex
                                 val hexString = buffer.joinToString("") { "%02X".format(it) }
-                                val cardNumber = hexString.substring(15, 22)
+                                LogUtils.file("hex string = ",hexString)
+                                val cardNumber = hexString.substring(14, 22)
+                                LogUtils.file("card number =: $cardNumber")
                                 val bundle =Bundle()
                                 bundle.putString("ICCardType", "PSAM")
                                 bundle.putString("ICCardContent", cardNumber)

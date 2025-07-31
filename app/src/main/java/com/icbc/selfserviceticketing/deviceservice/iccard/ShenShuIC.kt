@@ -1,7 +1,6 @@
 package com.icbc.selfserviceticketing.deviceservice.iccard
 
 import android.hardware.usb.UsbDevice
-import android.os.Build
 import android.os.Bundle
 import android.serialport.SerialPort
 import android.serialport.SerialPortFinder
@@ -12,6 +11,7 @@ import com.icbc.selfserviceticketing.deviceservice.NonContactDeviceListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.io.File
@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 class ShenShuIC(private val port: String="/dev/ttyS2", private val cScope: CoroutineScope) :
     IRFReader.Stub() {
     private var listener: NonContactDeviceListener?=null
-    private var isOpen = true
     private var isRun = AtomicBoolean(false)
     var device: UsbDevice? = null
     var serialJob: Job? = null
@@ -46,10 +45,6 @@ class ShenShuIC(private val port: String="/dev/ttyS2", private val cScope: Corou
         Log.d(TAG, "serialPortRead: ${devicesPath.contentDeepToString()}")
         LogUtils.file("${devices.contentDeepToString()}")
         LogUtils.file("${devicesPath.contentDeepToString()}")
-        if (isRun.get()) {
-            LogUtils.file("serialPortRead isRun")
-            return
-        }
         Log.d(TAG, "serialPortRead: launch read isRun =${isRun.get()}")
         mSerialPort = SerialPort(File(port), DEV_BAUDRATE)
         mSerialPort?.let { sp ->
@@ -59,8 +54,8 @@ class ShenShuIC(private val port: String="/dev/ttyS2", private val cScope: Corou
                     LogUtils.d("open sp path=${sp.device.absolutePath} baudrate=${sp.baudrate} dataBits=${sp.dataBits} parity=${sp.parity}")
                     isRun.set(true)
                     try {
-                        while (isOpen) {
-                            delay(400)
+                        while (isRun.get()) {
+                            delay(500)
                             val size = inputStream.available()
                             if (size > 0) {
                                 val buffer = ByteArray(32)
@@ -70,9 +65,10 @@ class ShenShuIC(private val port: String="/dev/ttyS2", private val cScope: Corou
                                 LogUtils.file("hex string = ",hexString)
                                 val cardNumber = hexString.substring(14, 22)
                                 LogUtils.file("card number =: $cardNumber")
+                                val reverseCardNumber =reverseHexString(cardNumber)
                                 val bundle =Bundle()
                                 bundle.putString("ICCardType", "PSAM")
-                                bundle.putString("ICCardContent", cardNumber)
+                                bundle.putString("ICCardContent", reverseCardNumber)
                                 listener?.readCardCallBack("ICCard_Read_OnSuccess", bundle)
                                 delay(interval)
                             }
@@ -118,15 +114,21 @@ class ShenShuIC(private val port: String="/dev/ttyS2", private val cScope: Corou
     }
 
     override fun readICCardByNonContact(params: Bundle?, listener: NonContactDeviceListener?) {
-        this.interval=interval
         LogUtils.file("开始读卡")
         this.listener = listener
         serialPortRead()
     }
-
+    fun reverseHexString(input: String): String {
+        // 按每两位分组
+        val bytes = input.chunked(2)
+        // 反转分组后拼接
+        return bytes.reversed().joinToString("")
+    }
     override fun stopReadICCardByNonContact(params: Bundle?): Bundle? {
         LogUtils.file("停止读卡")
-        isOpen = false
+        listener = null
+        isRun.set(false)
+        serialJob?.cancel()
         mSerialPort?.let {
             LogUtils.file("tryClose 尝试关闭串口")
             it.tryClose()
